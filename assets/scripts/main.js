@@ -1,0 +1,120 @@
+/**
+ * Point d'entrée principal de l'application
+ * Orchestration entre les différents modules
+ */
+
+import { fetchChannel, fetchBoatsForChannel } from './data.js';
+import { logConfig } from './config.js';
+import MapManager from './map.js';
+import UIManager from './ui.js';
+
+class Application {
+    constructor() {
+        this.mapManager = new MapManager('map');
+        this.uiManager = new UIManager();
+        this.channels = [];
+        this.currentChannel = null;
+        this.boats = [];
+    }
+
+    /**
+     * Trouve un canal par son ID
+     * @param {string} channelId - L'ID du canal
+     * @returns {Object|null} Le canal trouvé ou null
+     */
+    getChannelById(channelId) {
+        return this.channels.results.find(ch => ch.voie_navigable === channelId) || null;
+    }
+
+    /**
+     * Initialise l'application
+     */
+    async init() {
+        try {
+
+            // Récupérer la liste des canaux (dynamique ou mock)
+            this.channels = await fetchChannel();
+            console.log("🚀 --- Application --- this.channels:", this.channels);
+
+
+            if (!this.channels.results || this.channels.results.length === 0) {
+                throw new Error('Aucun canal disponible');
+            }
+
+            // Initialiser le dropdown avec les canaux
+            this.uiManager.initChannelSelect(this.channels.results, (channelId) =>
+                this.handleChannelChange(channelId)
+            );
+
+            // Charger le canal par défaut (le premier de la liste)
+            await this.loadChannel(this.channels.results[0].voie_navigable);
+        } catch (error) {
+            this.uiManager.showError('Erreur lors de l\'initialisation de l\'application');
+            console.error(error);
+        }
+    }
+
+    /**
+     * Charge un canal et affiche ses données
+     * @param {string} channelId - L'ID du canal à charger
+     */
+    async loadChannel(channelId) {
+        try {
+            this.uiManager.showLoading();
+
+            // Récupérer les données du canal
+            const channel = this.getChannelById(channelId);
+
+            if (!channel) {
+                throw new Error(`Canal ${channelId} non trouvé`);
+            }
+
+            this.currentChannel = channel;
+
+            // Charger les données et afficher la carte
+            await this.mapManager.loadChannel(channel, (boat) =>
+                this.handleBoatClick(boat)
+            );
+
+            // Récupérer les bateaux pour les utiliser later
+            //this.boats = await fetchBoatsForChannel(channelId);
+
+            this.uiManager.hideLoading();
+        } catch (error) {
+            this.uiManager.hideLoading();
+            this.uiManager.showError(`Erreur lors du chargement du canal: ${error.message}`);
+            console.error(error);
+        }
+    }
+
+    /**
+     * Gère le changement de canal via le dropdown
+     * @param {string} channelId - Le nouvel ID du canal sélectionné
+     */
+    async handleChannelChange(channelId) {
+        await this.loadChannel(channelId);
+    }
+
+    /**
+     * Gère le clic sur un marqueur de bateau
+     * @param {Object} boat - Les données du bateau cliqué
+     */
+    handleBoatClick(boat) {
+        console.log('Bateau cliqué:', boat);
+
+        // Afficher la modal avec les bateaux à proximité
+        // Pour maintenant, on affiche juste le bateau cliqué
+        this.uiManager.showBoatsModal([boat]);
+    }
+}
+
+// Initialiser l'application au chargement du DOM
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new Application();
+    app.init();
+
+    // Rendre l'instance globale pour le debug et les operations externes
+    window.app = app;
+    window.mapManager = app.mapManager;
+    window.uiManager = app.uiManager;
+});

@@ -1,0 +1,194 @@
+/* Styles personnalisés pour Leaflet */
+
+/* Conteneur de la carte */
+.leaflet-container {
+    background-color: #e8f0f5;
+    font-family: inherit;
+}
+
+/* Customisation des marqueurs */
+.boat-marker {
+    font-size: 1.5rem;
+}
+
+.lock-marker {
+    font-size: 1.8rem;
+}
+
+/* Popups et tooltips */
+.leaflet-popup {
+    font-size: 0.9rem;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.leaflet-popup-tip {
+    background-color: #fff;
+}
+
+/* Contrôles Leaflet */
+.leaflet-control-zoom,
+.leaflet-control-attribution {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+    background-color: #fff;
+    color: #1a1a1a;
+    border: 1px solid #ddd;
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+    transition: background-color 0.2s ease;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+    background-color: #f0f0f0;
+}
+
+/* Attibution */
+.leaflet-control-attribution {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    max-width: 90%;
+}
+
+.leaflet-control-attribution.leaflet-control-attribution-collapsed {
+    background-color: rgba(255, 255, 255, 0.9);
+    width: 30px;
+    height: auto;
+}
+
+/* Polylines (canaux) */
+.canal-line {
+    stroke: #4a90e2;
+    stroke-width: 3px;
+    opacity: 0.7;
+    dasharray: none;
+}
+
+.canal-line:hover {
+    stroke-width: 4px;
+    opacity: 0.9;
+}
+
+/* Icônes personnalisées avec CSS */
+.custom-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-icon:hover,
+.custom-icon:focus {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.custom-icon:active {
+    transform: scale(1.05);
+}
+
+/* Marqueur bateau */
+.boat-icon {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+/* Marqueur écluse */
+.lock-icon {
+    background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+}
+
+/* Animation des marqueurs */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    }
+    100% {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.boat-icon.active {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Responsive - Ajustements pour petits écrans */
+@media (max-width: 480px) {
+    .leaflet-control-zoom {
+        margin-left: 10px;
+        margin-bottom: 10px;
+    }
+
+    .leaflet-control-zoom-in,
+    .leaflet-control-zoom-out {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+
+    .boat-icon {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+    }
+
+    .lock-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .leaflet-control-attribution {
+        font-size: 0.7rem;
+    }
+}
+
+/* Responsive - Tablette et desktop */
+@media (min-width: 768px) {
+    .boat-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    .lock-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .leaflet-control-zoom {
+        margin-left: 15px;
+        margin-bottom: 15px;
+    }
+}
