@@ -148,7 +148,7 @@ class MapManager {
     createBoatIcon() {
         return L.divIcon({
             className: 'custom-icon boat-icon',
-            html: '⛵',
+            html: '<img src="./assets/images/boat.svg" alt="Bateau" style="width: 100%; height: 100%; object-fit: contain;">',
             iconSize: [32, 32],
             iconAnchor: [16, 16],
             popupAnchor: [0, -16]

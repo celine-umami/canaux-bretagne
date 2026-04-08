@@ -58,6 +58,7 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    align-items: center;
 }
 
 .app-title {
@@ -78,10 +79,12 @@ html, body {
     font-size: 0.875rem;
     font-weight: 500;
     color: #333;
+    text-align: center;
 }
 
 .dropdown-menu {
     width: 100%;
+    max-width: 400px;
     padding: 0.75rem;
     font-size: 1rem;
     border: 2px solid #ddd;
