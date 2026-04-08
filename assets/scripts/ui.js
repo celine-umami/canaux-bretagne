@@ -44,6 +44,24 @@ class UIManager {
     }
 
     /**
+     * Extrait l'heure d'un timestamp ISO 8601
+     * @param {string} timestamp - Format: 2026-03-13T10:56:06.683+01:00
+     * @returns {string} L'heure au format HH:MM:SS
+     */
+    extractTimeFromTimestamp(timestamp) {
+        if (!timestamp) return 'N/A';
+        try {
+            // Extraire la partie heure du timestamp
+            const timePart = timestamp.split('T')[1]; // "10:56:06.683+01:00"
+            const time = timePart.split('.')[0]; // "10:56:06"
+            return time;
+        } catch (error) {
+            console.error('Erreur extraction heure:', error);
+            return timestamp;
+        }
+    }
+
+    /**
      * Initialise le dropdown avec les canaux
      * @param {Array} channels - Liste des canaux
      * @param {Function} onChannelChange - Callback quand le canal change
@@ -110,12 +128,12 @@ class UIManager {
                 const boatEl = document.createElement('div');
                 boatEl.className = 'boat-item';
                 boatEl.innerHTML = `
-                    <div class="boat-name">${this.escapeHtml(boat.name)}</div>
-                    <div class="boat-detail"><strong>Propriétaire:</strong> ${this.escapeHtml(boat.owner)}</div>
-                    <div class="boat-detail"><strong>Type:</strong> ${this.escapeHtml(boat.type)}</div>
-                    <div class="boat-detail"><strong>Statut:</strong> ${this.escapeHtml(boat.status)}</div>
-                    <div class="boat-detail"><strong>Direction:</strong> ${this.escapeHtml(boat.direction)}</div>
-                    <div class="boat-detail"><strong>Longueur:</strong> ${boat.length}m</div>
+                    <div class="boat-name">${this.escapeHtml(boat.nom_bateau)}</div>
+                    <div class="boat-detail"><strong>Eclusier:</strong> ${this.escapeHtml(boat.identite)} ${this.escapeHtml(boat.prenom)}</div>
+                    <div class="boat-detail"><strong>Type:</strong> ${this.escapeHtml(boat.type_embarcation)}</div>
+                    <div class="boat-detail"><strong>Passage:</strong> ${this.extractTimeFromTimestamp(boat.idtech)}</div>
+                    <div class="boat-detail"><strong>Sens:</strong> ${this.escapeHtml(boat.sens)}</div>
+                    <div class="boat-detail"><strong>Destination:</strong> Inconnue</div>
                 `;
                 this.elements.boatsList.appendChild(boatEl);
             });

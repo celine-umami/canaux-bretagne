@@ -76,7 +76,8 @@ class Application {
             );
 
             // Récupérer les bateaux pour les utiliser later
-            //this.boats = await fetchBoatsForChannel(channelId);
+            this.boats = await fetchBoatsForChannel(channelId);
+
 
             this.uiManager.hideLoading();
         } catch (error) {
@@ -95,15 +96,17 @@ class Application {
     }
 
     /**
-     * Gère le clic sur un marqueur de bateau
-     * @param {Object} boat - Les données du bateau cliqué
+     * Gère le clic sur un marqueur de bateau (groupe de bateaux dans un bief)
+     * @param {Array} boats - Tableau des bateaux du bief cliqué
      */
-    handleBoatClick(boat) {
-        console.log('Bateau cliqué:', boat);
+    handleBoatClick(boats) {
+        if (!Array.isArray(boats)) {
+            boats = [boats];
+        }
+        console.log(`Marqueur bateau cliqué avec ${boats.length} bateau(x):`, boats);
 
-        // Afficher la modal avec les bateaux à proximité
-        // Pour maintenant, on affiche juste le bateau cliqué
-        this.uiManager.showBoatsModal([boat]);
+        // Afficher la modal avec tous les bateaux du bief
+        this.uiManager.showBoatsModal(boats);
     }
 }
 

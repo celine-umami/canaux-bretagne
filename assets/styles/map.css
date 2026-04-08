@@ -103,7 +103,7 @@
 
 /* Marqueur bateau */
 .boat-icon {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    background: transparent;
     color: #fff;
     width: 32px;
     height: 32px;

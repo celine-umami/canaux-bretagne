@@ -109,36 +109,166 @@ class MapManager {
     }
 
     /**
-     * Ajoute les marqueurs des bateaux sur la carte
+     * Déduplique les bateaux en gardant le plus récent par nom
      * @param {Array} boats - Tableau des bateaux
-     * @param {Function} onBoatClick - Callback quand on clique sur un bateau
+     * @returns {Array} Bateaux dédupliqués (le plus récent par nom_bateau)
      */
-    addBoats(boats, onBoatClick) {
-        if (!boats || boats.length === 0) {
+    deduplicateBoats(boats) {
+        const boatsByName = new Map();
+
+        boats.forEach(boat => {
+            const name = boat.nom_bateau;
+            if (!name) return;
+
+            const existing = boatsByName.get(name);
+            
+            // Comparer les timestamps idtech
+            if (!existing) {
+                boatsByName.set(name, boat);
+            } else {
+                // Garder le plus récent (idtech le plus grand)
+                const existingTime = new Date(existing.idtech).getTime();
+                const newTime = new Date(boat.idtech).getTime();
+                
+                if (newTime > existingTime) {
+                    boatsByName.set(name, boat);
+                } 
+            }
+        });
+
+        const deduped = Array.from(boatsByName.values());
+        return deduped;
+    }
+
+    /**
+     * Génère un point aléatoire entre deux coordonnées
+     */
+    getRandomPointBetween(lat1, lng1, lat2, lng2) {
+        const offsetLat = (Math.random() - 0.5) * 0.01;
+        const offsetLng = (Math.random() - 0.5) * 0.01;
+        const randomLat = lat1 + (lat2 - lat1) * (0.3 + Math.random() * 0.4) + offsetLat;
+        const randomLng = lng1 + (lng2 - lng1) * (0.3 + Math.random() * 0.4) + offsetLng;
+        return [randomLat, randomLng];
+    }
+
+    /**
+     * Groupe les bateaux par bief (paire d'écluses)
+     * @param {Array} boats - Tableau des bateaux
+     * @param {Array} locks - Tableau des écluses
+     * @returns {Map} Map avec clé "numEcluse|sens" et valeur = tableau de bateaux
+     */
+    groupBoatsByBief(boats, locks) {
+        const boatsByBief = new Map();
+
+
+        // Grouper les bateaux par bief
+        boats.forEach(boat => {
+            const numEcluse = boat.num_ecluse;
+            const sens = boat.sens;
+
+            if (numEcluse === null || numEcluse === undefined || !sens) {
+                console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse ou sens`);
+                return;
+            }
+
+            // Clé pour identifier le bief: "numEcluse|sens"
+            const biefKey = `${numEcluse}|${sens}`;
+            
+            if (!boatsByBief.has(biefKey)) {
+                boatsByBief.set(biefKey, []);
+            }
+            boatsByBief.get(biefKey).push(boat);
+            
+        });
+
+        return boatsByBief;
+    }
+
+    /**
+     * Trouve les coordonnées des deux écluses d'un bief
+     * @param {number} numEcluse - Numéro de l'écluse
+     * @param {string} sens - Direction (Montant ou Descendant)
+     * @param {Array} locks - Tableau de toutes les écluses
+     * @returns {Object|null} {lock1, lock2} ou null si non trouvable
+     */
+    findBiefLocks(numEcluse, sens, locks) {
+        // Trouver l'écluse actuelle
+        const currentLock = locks.find(l => l.num_ecluse === numEcluse);
+        
+        if (!currentLock) return null;
+
+        if (sens === "Montant") {
+            // Montant: chercher l'écluse suivante (numéro + 1)
+            const nextLock = locks.find(l => l.num_ecluse === numEcluse + 1);
+            return nextLock ? { lock1: currentLock, lock2: nextLock } : null;
+        } else {
+            // Descendant: chercher l'écluse précédente (numéro - 1)
+            const prevLock = locks.find(l => l.num_ecluse === numEcluse - 1);
+            return prevLock ? { lock1: prevLock, lock2: currentLock } : null;
+        }
+    }
+
+    /**
+     * Ajoute les marqueurs des bateaux groupés par bief
+     * @param {Array} boats - Tableau des bateaux
+     * @param {Array} locks - Tableau des écluses
+     * @param {Function} onBoatClick - Callback pour le clic
+     */
+    addBoats(boats, locks, onBoatClick) {
+
+        if (!boats || boats.length === 0 || !locks || locks.length === 0) {
+            console.warn("⚠️ Pas de bateaux ou d'écluses");
             return;
         }
 
-        boats.forEach(boat => {
-            const marker = L.marker(boat.position, {
-                icon: this.createBoatIcon(),
-                title: boat.name
+        try {
+            // Dédupliquer les bateaux (garder le plus récent par nom)
+            const deduplicatedBoats = this.deduplicateBoats(boats);
+
+            // Grouper les bateaux par bief
+            const boatsByBief = this.groupBoatsByBief(deduplicatedBoats, locks);
+
+            if (boatsByBief.size === 0) {
+                console.warn("⚠️ Aucun bateau groupé!");
+            }
+
+            // Créer les marqueurs pour chaque bief
+            boatsByBief.forEach((boatsInBief, biefKey) => {
+                const [numEcluseStr, sens] = biefKey.split('|');
+                const numEcluse = parseInt(numEcluseStr, 10);
+                
+                // Trouver les deux écluses du bief
+                const biefLocks = this.findBiefLocks(numEcluse, sens, locks);
+                if (!biefLocks) {
+                    console.warn(`⚠️ Biefs locks non trouvés pour: #${numEcluse} (${sens})`);
+                    return;
+                }
+
+                // Placer un marqueur aléatoire entre les deux écluses
+                const [lat1, lng1] = biefLocks.lock1.geo_point.split(',').map(c => parseFloat(c.trim()));
+                const [lat2, lng2] = biefLocks.lock2.geo_point.split(',').map(c => parseFloat(c.trim()));
+                
+                const [markerLat, markerLng] = this.getRandomPointBetween(lat1, lng1, lat2, lng2);
+
+                // Créer le marqueur
+                const marker = L.marker([markerLat, markerLng], {
+                    icon: this.createBoatIcon(),
+                    title: `${boatsInBief.length} bateau(x)`
+                });
+
+                // Ajouter un callback pour le clic
+                marker.on('click', () => {
+                    if (onBoatClick) {
+                        onBoatClick(boatsInBief);
+                    }
+                });
+
+                marker.addTo(this.markersLayer);
+                this.currentMarkers.push(marker);
             });
-
-            // Ajouter les informations du bateau au popup
-            const popupContent = `
-                <strong>${boat.name}</strong><br/>
-                <small>Propriétaire: ${boat.owner}</small><br/>
-                <small>Type: ${boat.type}</small><br/>
-                <small>Statut: ${boat.status}</small>
-            `;
-            marker.bindPopup(popupContent);
-
-            // Enregistrer le handler pour ce bateau
-            marker.on('click', () => onBoatClick(boat));
-
-            marker.addTo(this.markersLayer);
-            this.currentMarkers.push(marker);
-        });
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
+        }
     }
 
     /**
@@ -148,7 +278,7 @@ class MapManager {
     createBoatIcon() {
         return L.divIcon({
             className: 'custom-icon boat-icon',
-            html: '<img src="./assets/images/boat.svg" alt="Bateau" style="width: 100%; height: 100%; object-fit: contain;">',
+            html: '<img src="/assets/images/icons/boat.svg" alt="Bateau" style="width: 100%; height: 100%; object-fit: contain;">',
             iconSize: [32, 32],
             iconAnchor: [16, 16],
             popupAnchor: [0, -16]
@@ -181,12 +311,12 @@ class MapManager {
             // Charger les écluses et bateaux en parallèle
             const [locks, boats] = await Promise.all([
                 fetchLocksForChannel(channel.voie_navigable),
-                //fetchBoatsForChannel(channel.voie_navigable)
+                fetchBoatsForChannel(channel.voie_navigable)
             ]);
 
-
             this.addLocks(locks.results);
-            //this.addBoats(boats, onBoatClick);
+            this.addBoats(boats.results, locks.results, onBoatClick);
+
 
             // Ajuster la vue pour afficher toutes les écluses
             if (locks && locks.results.length > 0) {

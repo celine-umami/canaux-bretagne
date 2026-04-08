@@ -5,7 +5,8 @@
 
 export const API_CONFIG = {
     // URLs des APIs
-    DATA_URL: 'https://data.bretagne.bzh/api/explore/v2.1/catalog/datasets/2026-formulaire-canaux-saisies/records',
+    DATA_URL: 'https://data.bretagne.bzh/api/explore/v2.1/catalog/datasets/2026-form-vn-stat/records',
+    // DATA_URL: 'https://data.bretagne.bzh/api/explore/v2.1/catalog/datasets/2026-formulaire-canaux-saisies/records',
     ECLUSE_DATA: 'https://data.bretagne.bzh/api/explore/v2.1/catalog/datasets/ref-ecluse-biefs/records',
     // Authentification
     API_KEY: '4dec0b70a035e76a34bf11a4f8aa175ff989f968ddb19d61fdd25962', 

@@ -38,8 +38,9 @@ export async function fetchLocksForChannel(channelId) {
  */
 export async function fetchBoatsForChannel(channelId) {
     try {
+        channelId = channelId === "Blavet" ? "Canal du Blavet" : channelId;
         const whereClause = encodeURIComponent(`voie_navigable="${channelId}"`);
-        const url = `${API_CONFIG.DATA_URL}?where=${whereClause}&limit=50`;
+        const url = `${API_CONFIG.DATA_URL}?where=${whereClause}&limit=100`;
 
         return await fetchFromAPI(url);
     } catch (error) {
