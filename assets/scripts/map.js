@@ -162,7 +162,7 @@ class MapManager {
     createLockIcon() {
         return L.divIcon({
             className: 'custom-icon lock-icon',
-            html: '🔒',
+            html: '',
             iconSize: [36, 36],
             iconAnchor: [18, 18],
             popupAnchor: [0, -18]
@@ -183,7 +183,6 @@ class MapManager {
                 fetchLocksForChannel(channel.voie_navigable),
                 //fetchBoatsForChannel(channel.voie_navigable)
             ]);
-            console.log("🚀 --- MapManager --- locks:", locks);
 
 
             this.addLocks(locks.results);

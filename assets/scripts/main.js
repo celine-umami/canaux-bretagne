@@ -34,7 +34,6 @@ class Application {
 
             // Récupérer la liste des canaux (dynamique ou mock)
             this.channels = await fetchChannel();
-            console.log("🚀 --- Application --- this.channels:", this.channels);
 
 
             if (!this.channels.results || this.channels.results.length === 0) {

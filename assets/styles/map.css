@@ -113,7 +113,7 @@
 
 /* Marqueur écluse */
 .lock-icon {
-    background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+    background-color: #A1B5DC;
     color: #fff;
     width: 36px;
     height: 36px;
