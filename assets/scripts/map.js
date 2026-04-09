@@ -35,6 +35,9 @@ class MapManager {
                 maxNativeZoom: 18
             }).addTo(this.map);
 
+            // ajoute le contrôle de plein écran
+            this.map.addControl(new L.Control.FullScreen());
+
             // Créer des couches pour les éléments
             this.pathLayer = L.featureGroup().addTo(this.map);
             this.markersLayer = L.featureGroup().addTo(this.map);
@@ -87,7 +90,7 @@ class MapManager {
         locks.forEach(lock => {
             // Parser geo_point "lat, lng" en coordonnées
             const [lat, lng] = lock.geo_point.split(',').map(coord => parseFloat(coord.trim()));
-            
+
             if (isNaN(lat) || isNaN(lng)) {
                 console.warn('Coordonnées invalides pour écluse:', lock.nom);
                 return;
@@ -103,7 +106,7 @@ class MapManager {
                 <small>Numéro: ${lock.num_ecluse}</small><br/>
                 <small>Sens: ${lock.sens || 'N/A'}</small>
             `);
-            
+
             marker.addTo(this.markersLayer);
         });
     }
@@ -121,7 +124,7 @@ class MapManager {
             if (!name) return;
 
             const existing = boatsByName.get(name);
-            
+
             // Comparer les timestamps idtech
             if (!existing) {
                 boatsByName.set(name, boat);
@@ -129,10 +132,10 @@ class MapManager {
                 // Garder le plus récent (idtech le plus grand)
                 const existingTime = new Date(existing.idtech).getTime();
                 const newTime = new Date(boat.idtech).getTime();
-                
+
                 if (newTime > existingTime) {
                     boatsByName.set(name, boat);
-                } 
+                }
             }
         });
 
@@ -173,12 +176,12 @@ class MapManager {
 
             // Clé pour identifier le bief: "numEcluse|sens"
             const biefKey = `${numEcluse}|${sens}`;
-            
+
             if (!boatsByBief.has(biefKey)) {
                 boatsByBief.set(biefKey, []);
             }
             boatsByBief.get(biefKey).push(boat);
-            
+
         });
 
         return boatsByBief;
@@ -194,7 +197,7 @@ class MapManager {
     findBiefLocks(numEcluse, sens, locks) {
         // Trouver l'écluse actuelle
         const currentLock = locks.find(l => l.num_ecluse === numEcluse);
-        
+
         if (!currentLock) return null;
 
         if (sens === "Montant") {
@@ -236,7 +239,7 @@ class MapManager {
             boatsByBief.forEach((boatsInBief, biefKey) => {
                 const [numEcluseStr, sens] = biefKey.split('|');
                 const numEcluse = parseInt(numEcluseStr, 10);
-                
+
                 // Trouver les deux écluses du bief
                 const biefLocks = this.findBiefLocks(numEcluse, sens, locks);
                 if (!biefLocks) {
@@ -247,7 +250,7 @@ class MapManager {
                 // Placer un marqueur aléatoire entre les deux écluses
                 const [lat1, lng1] = biefLocks.lock1.geo_point.split(',').map(c => parseFloat(c.trim()));
                 const [lat2, lng2] = biefLocks.lock2.geo_point.split(',').map(c => parseFloat(c.trim()));
-                
+
                 const [markerLat, markerLng] = this.getRandomPointBetween(lat1, lng1, lat2, lng2);
 
                 // Créer le marqueur
