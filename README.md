@@ -1,46 +1,49 @@
 # Suivi du Trafic Fluvial - Bretagne
 
-Application web mobile-first pour visualiser et suivre le trafic des bateaux sur les canaux bretons.
+Application web mobile-first pour visualiser et suivre le trafic des bateaux sur les canaux bretons en temps réel.
 
 ## 📋 Description
 
 Cette application permet de :
-- Sélectionner un canal breton via un menu dropdown
+- Sélectionner un canal breton via un menu dropdown (données en temps réel depuis l'API)
 - Visualiser le tracé du canal sur une carte interactive (Leaflet)
-- Voir les écluses présentes sur le canal
-- Identifier les bateaux en circulation avec leurs positions
-- Obtenir des détails sur les bateaux en cliquant sur leurs marqueurs
+- Voir les écluses et biefs présents sur le canal
+- Identifier les bateaux en circulation avec leurs positions réelles
+- Consulter les détails des bateaux en cliquant sur leurs marqueurs
+- Modal interactive pour explorer tous les bateaux présents dans un bief
 
-## 🎯 Spécifications V1
+## 🎯 Spécifications Actuelles
 
-- **Technologie**: HTML5, CSS3, JavaScript vanilla
+- **Technologie**: HTML5, CSS3, JavaScript ES6+ (modules)
+- **Architecture**: Modulaire avec classes (Application, MapManager, UIManager)
 - **Responsive**: Mobile-first, adapté pour tous les appareils
-- **Pages**: 1 seule page pour la V1
-- **Carte**: Leaflet
-- **Données**: Hardcodées pour les canaux, mock pour les écluses et bateaux
+- **Pages**: 1 seule page SPA
+- **Carte**: Leaflet 1.9.4
+- **Données**: API Bretagne Data (data.bretagne.bzh)
+  - Canaux et navigation: groupe-by voie navigable
+  - Écluses et biefs: ref-ecluse-biefs
+  - Bateaux: 2026-form-vn-stat
 
 ## 📁 Structure du projet
 
 ```
 canaux-bretagne/
-├── index.html                    # Page HTML principale
+├── index.html                    # Page HTML principale (SPA)
 ├── assets/
 │   ├── styles/
 │   │   ├── main.css             # Styles globaux et responsive
 │   │   └── map.css              # Styles personnalisés Leaflet
 │   ├── scripts/
-│   │   ├── main.js              # Point d'entrée - orchestration
-│   │   ├── map.js               # Gestion de la carte Leaflet
-│   │   ├── data.js              # Gestion des données (fetch)
-│   │   ├── channels.js          # Données hardcodées des canaux
-│   │   └── ui.js                # Gestion de l'interface
+│   │   ├── main.js              # Classe Application - orchestration et init
+│   │   ├── map.js               # Classe MapManager - gestion de la carte Leaflet
+│   │   ├── data.js              # Fonctions de fetch API (canaux, écluses, bateaux)
+│   │   ├── ui.js                # Classe UIManager - gestion de l'interface DOM
+│   │   └── config.js            # Configuration centralisée (URLs API, clés, paramètres)
 │   ├── images/
-│   │   └── icons/               # Icônes personnalisées
-│   └── data/
-│       └── sample-data.json     # (Optionnel) Données de test
-├── data-sources/
-│   └── api-specs.md             # Documentation des APIs externes
-└── README.md                     # Ce fichier
+│   │   ├── logo.png             # Logo de l'application
+│   │   └── icons/               # Icônes personnalisées (écluses, bateaux)
+└── data-sources/
+    └── api-specs.md             # Documentation des APIs externes
 ```
 
 ## 🚀 Installation et démarrage
@@ -74,30 +77,59 @@ Accédez ensuite à `http://localhost:8000` dans votre navigateur.
 
 ## 🗂️ Architecture
 
-### Modules
+### Orchestration
 
-#### `main.js`
-Point d'entrée de l'application. Orchestrat les interactions entre les modules.
+L'application utilise une **architecture modulaire ES6+** avec 3 classes principales qui communiquent ensemble:
 
-#### `map.js` (`MapManager`)
-Gère tout ce qui concerne la carte Leaflet:
-- Initialisation de la carte
-- Affichage du tracé du canal
-- Positionnement des marqueurs (écluses, bateaux)
-- Manipulation des contrôles Leaflet
+```
+Application (main.js)
+    ↓
+    ├→ MapManager (map.js)     [Gestion de la carte Leaflet]
+    ├→ UIManager (ui.js)       [Gestion de l'interface DOM]
+    └→ data.js (fonctions)     [Récupération des données API]
+```
+
+### Modules détaillés
+
+#### `config.js`
+Configuration centralisée de l'application:
+- **API_CONFIG.DATA_URL**: Dataset des bateaux en navigation (2026-form-vn-stat)
+- **API_CONFIG.ECLUSE_DATA**: Dataset des écluses et biefs (ref-ecluse-biefs)
+- **Paramètres Leaflet**: URLs des tuiles, attributions
+- **Timeouts**: Configuration des délais d'API
 
 #### `data.js`
-Module de gestion des données externes:
-- `fetchLocksForChannel()` - Récupère les écluses d'un canal
-- `fetchBoatsForChannel()` - Récupère les bateaux d'un canal
+Fonctions d'accès aux données externes:
+- `fetchChannel()` - Récupère la liste des canaux (groupés par voie_navigable)
+- `fetchLocksForChannel(channelId)` - Récupère les écluses d'un canal depuis l'API
+- `fetchBoatsForChannel(channelId)` - Récupère les bateaux présents sur un canal
+- Gestion des erreurs et des timeouts
 
-**À adapter**: Remplacer les données mock par des appels API réels.
+#### `main.js` - Classe `Application`
+Point d'entrée et orchestration de l'application:
+- **init()**: Initialise l'app, récupère les canaux, configure le dropdown
+- **loadChannel(channelId)**: Charge un canal, ses écluses et bateaux
+- **handleChannelChange()**: Callback du changement de canal
+- **handleBoatClick()**: Gère l'affichage de la modal des bateaux
 
-#### `channels.js`
-Données hardcodées des canaux bretons:
-- Noms et IDs
-- Coordonnées géographiques
-- Tracé du canal
+#### `map.js` - Classe `MapManager`
+Gestion complète de la carte Leaflet:
+- **initMap()**: Crée la carte, ajoute les couches (tuiles, tracé, marqueurs)
+- **loadChannel()**: Charge et affiche un canal (tracé, écluses, bateaux)
+- **drawChannelPath()**: Dessine le tracé du canal (polyline)
+- **addLocks()**: Ajoute les marqueurs des écluses avec popups
+- **addBoats()**: Place les bateaux sur la carte avec groupage par bief
+- **deduplicateBoats()**: Garde la position la plus récente par bateau
+- **createLockIcon() / createBoatIcon()**: Crée les custom icons Leaflet
+
+#### `ui.js` - Classe `UIManager`
+Gestion complète de l'interface utilisateur:
+- **initChannelSelect()**: Configure le dropdown des canaux
+- **showBoatsModal()**: Affiche la modal avec détails des bateaux d'un bief
+- **closeModal()**: Ferme la modal (gère aussi Escape, clic background)
+- **showLoading() / hideLoading()**: Affiche/cache l'indicateur de chargement
+- **showError()**: Affiche un message d'erreur à l'utilisateur
+- **handleOrientationChange()**: Adaptation du layout au changement d'orientation
 
 #### `ui.js` (`UIManager`)
 Gère l'interface utilisateur:
@@ -105,217 +137,153 @@ Gère l'interface utilisateur:
 - Affichage/fermeture de la modal
 - Messages d'erreur
 - Gestion des événements DOM
+## ✨ Fonctionnalités
 
-### Flux de données
+### En temps réel
+- 🔄 Données dynamiques depuis l'API Bretagne Data
+- 📍 Positions réelles des bateaux et écluses
+- 🗺️ Tracés géographiques précis des canaux
+- ⚡ Chargement et rafraîchissement rapides
 
+### Gestion des bateaux
+- 🚢 Déduplication automatique des bateaux (garde le plus récent par nom)
+- 🎯 Groupage des bateaux par bief (section de canal)
+- 📝 Modal détaillée avec informations complètes
+- 🖱️ Interaction au clic pour explorer les bateaux
+
+### Interface utilisateur
+- 🎨 Design mobile-first et responsive
+- 🖥️ Adaptation dynamique selon l'orientation (portrait/paysage)
+- ⌨️ Fermeture de modal avec touche Escape
+- 📱 Contrôles tactiles optimisés
+
+## 🔄 Flux de l'application
+
+### Initialisation
 ```
-┌─────────────────────────────────────────────────────┐
-│         Utilisateur interagit (dropdown)           │
-└────────────────┬────────────────────────────────────┘
-                 │
-                 ▼
-         ┌──────────────────┐
-         │  handleChannelChange │
-         └────────┬─────────┘
-                  │
-        ┌─────────┴─────────────────────┐
-        │                               │
-        ▼                               ▼
-  ┌──────────────────┐      ┌─────────────────────┐
-  │  getChannelById │      │ initMap (Leaflet)  │
-  └────────┬────────┘      └──────────┬──────────┘
-           │                          │
-           ▼                          ▼
-    ┌──────────────┐       ┌──────────────────────┐
-    │ Coordonnées  │       │ drawChannelPath     │
-    │   tracé      │       └──────────┬───────────┘
-    └──────────────┘                  │
-                          ┌───────────┴────────────┐
-                          │                        │
-                          ▼                        ▼
-                  ┌─────────────────────────────────────┐
-                  │  fetchLocksForChannel / fetchBoats │
-                  │  (données mock ou API)             │
-                  └─────────┬──────────────────────────┘
-                            │
-                ┌───────────┴───────────┐
-                │                       │
-                ▼                       ▼
-          ┌──────────────┐      ┌──────────────┐
-          │  addLocks()  │      │  addBoats()  │
-          └──────────────┘      └──────────────┘
-                │                       │
-                └───────────┬───────────┘
-                            │
-                            ▼
-                    ┌─────────────────┐
-                    │ Carte affichée  │
-                    └─────────────────┘
+1. Page charge (DOMContentLoaded)
+2. Application() créée et initialise
+3. MapManager prépare la carte Leaflet
+4. UIManager configure le dropdown
+5. fetchChannel() récupère les canaux de l'API
+6. Premier canal chargé automatiquement
 ```
 
-### Interaction avec les bateaux
-
+### Changement de canal
 ```
-┌──────────────────────────┐
-│  Clic sur marqueur bateau │
-└────────────┬─────────────┘
-             │
-             ▼
-      ┌──────────────────┐
-      │ handleBoatClick  │
-      └────────┬─────────┘
-               │
-               ▼
-        ┌──────────────────────┐
-        │  showBoatsModal()    │
-        │  (affiche détails)   │
-        └──────────────────────┘
+Sélection dropdown
+    ↓
+handleChannelChange()
+    ↓
+loadChannel(channelId)
+    ├→ MapManager.loadChannel()
+    │   ├→ drawChannelPath()
+    │   ├→ fetchLocksForChannel() + addLocks()
+    │   ├→ fetchBoatsForChannel() + addBoats()
+    │   └→ deduplicateBoats() [garde le plus récent]
+    │
+    └→ UIManager.hideLoading()
 ```
 
-## 🔄 Flux de données - Détail
+### Interaction utilisateur
+```
+Clic sur marqueur bateau
+    ↓
+handleBoatClick(boats)
+    ↓
+UIManager.showBoatsModal(boats)
+    ↓
+Modal affichée avec détails
+```
 
-### 1. Initialisation
-- Application charge les données hardcodées des canaux
-- UIManager initialise le dropdown
-- Carte Leaflet est initialisée
-- Premier canal est chargé par défaut
+## 📊 Format des données API
 
-### 2. Changement de canal
-- L'utilisateur sélectionne un canal dans le dropdown
-- `handleChannelChange` est appelé
-- `loadChannel` orchestre le chargement:
-  - Fetch les données du canal (hardcodées)
-  - Affiche le tracé sur la carte
-  - Fetch les écluses (données mock)
-  - Fetch les bateaux (données mock)
-  - Ajoute les marqueurs à la carte
-
-### 3. Interaction utilisateur
-- Clic sur un marqueur de bateau
-- `handleBoatClick` extrait les données du bateau
-- Modal affiche les détails
-
-## 📊 Format des données
-
-### Canaux
-```javascript
+### Réponse fetchChannel()
+```json
 {
-    id: 'nantes-brest',
-    name: 'Canal Nantes-Brest',
-    bounds: [[lat1, lng1], [lat2, lng2]],
-    center: [lat, lng],
-    zoom: 9,
-    pathCoordinates: [[lat, lng], ...]
-}
-```
-
-### Écluses
-```javascript
-{
-    id: 'lock-1',
-    name: 'Écluse de X',
-    position: [lat, lng],
-    level: 1
-}
-```
-
-### Bateaux
-```javascript
-{
-    id: 'boat-1',
-    name: 'Le Navigateur',
-    owner: 'Jean Dupont',
-    position: [lat, lng],
-    type: 'Péniche',
-    status: 'En circulation',
-    direction: 'Nord',
-    length: 38.5
-}
-```
-
-## 🔌 Intégration des APIs externes
-
-Le module `data.js` contient les fonctions pour récupérer les données:
-
-```javascript
-// À remplacer par votre endpoint réel
-export async function fetchLocksForChannel(channelId) {
-    const response = await fetch(`/api/locks?channel=${channelId}`);
-    return response.json();
-}
-
-export async function fetchBoatsForChannel(channelId) {
-    const response = await fetch(`/api/boats?channel=${channelId}`);
-    return response.json();
-}
-```
-
-Voir `data-sources/api-specs.md` pour documenter vos APIs.
-
-## 📱 Responsive Design
-
-- **Mobile (< 480px)**: Optimisé pour téléphones
-- **Tablette (480px - 768px)**: Interface adaptée
-- **Desktop (> 768px)**: Amélioration cosmétique
-
-Points clés du responsive:
-- Header: Flexbox, ajustement de padding
-- Dropdown: 100% sur mobile, limité en largeur sur desktop
-- Modal: Overlay en bas sur mobile, centré sur desktop
-- Carte: 100% de la hauteur disponible
-
-## 🛠️ Développement
-
-### Ajouter un nouveau canal
-Modifier `assets/scripts/channels.js`:
-```javascript
-export const CHANNELS = [
-    // ... canaux existants
+  "results": [
     {
-        id: 'nouveau-canal',
-        name: 'Nouveau Canal',
-        // ... autres propriétés
+      "voie_navigable": "Canal de Nantes à Brest",
+      // autres champs regroupés
     }
-];
+  ]
+}
 ```
 
-### Modifier les données mock
-Modifier les fonctions dans `assets/scripts/data.js`:
-- `getMockLocks()`
-- `getMockBoats()`
+### Réponse fetchLocksForChannel()
+```json
+{
+  "results": [
+    {
+      "nom": "Écluse de Violettes",
+      "nom_formulaire": "Écluse des Violettes",
+      "num_ecluse": "1",
+      "geo_point": "47.8456, -3.3621",
+      "sens": "Amont"
+    }
+  ]
+}
+```
 
-### Intégrer une API réelle
-1. Modifier les fonctions `fetch*` dans `data.js`
-2. Adapter le format des réponses
-3. Gérer les erreurs réseau
+### Réponse fetchBoatsForChannel()
+```json
+{
+  "results": [
+    {
+      "nom_bateau": "Mon Bateau",
+      "voie_navigable": "Canal Nantes-Brest",
+      "idtech": "2026-03-13T10:56:06.683+01:00",
+      "geo_point": "47.8456, -3.3621"
+    }
+  ]
+}
+```
 
-### Ajouter des styles personnalisés
-- Styles globaux: `assets/styles/main.css`
-- Styles Leaflet: `assets/styles/map.css`
+## 🔌 Intégration API
 
-Les deux fichiers CSS sont importés dans `index.html`.
+### Configuration centralisée
+Voir `config.js` pour les URLs des 2 datasets Bretagne Data:
+- **DATA_URL**: Bateaux en navigation (2026-form-vn-stat)
+- **ECLUSE_DATA**: Écluses et biefs (ref-ecluse-biefs)
+
+Les données sont récupérées dynamiquement par `data.js` selon le canal sélectionné.
+
+## 📱 Responsive & Accessibilité
+
+- ✅ Mobile-first (< 480px)
+- ✅ Tablette (480px - 768px)
+- ✅ Desktop (> 768px)
+- ✅ Gestion orientation portrait/paysage
+- ✅ Clavier (Escape pour fermer modal)
+- ✅ Labels accessibles (aria-label)
 
 ## 🎨 Customisation
 
-### Couleurs
-Vous pouvez modifier les couleurs dans `main.css` et `map.css`:
-- Bleu primaire: `#4a90e2`
-- Rouge (bateaux): `#ff6b6b`
-- Orange (écluses): `#ffa500`
-- Gris: `#f5f5f5`
+### Couleurs principales
+- Tracé canal: `#4a90e2` (bleu)
+- Marqueurs bateaux: `#ff6b6b` (rouge)
+- Marqueurs écluses: `#ffa500` (orange)
 
-### Icônes des marqueurs
-Éditer les emojis ou créer des SVG dans `map.js`:
+### Modification des icônes
+Éditer `MapManager.createLockIcon()` et `createBoatIcon()` dans `map.js`:
 ```javascript
 createBoatIcon() {
     return L.divIcon({
-        html: '⛵', // Modifier cet emoji ou utiliser du HTML SVG
+        html: '⛵', // Changer l'emoji ou SVG
+        iconSize: [32, 32],
         // ...
     });
 }
 ```
 
-## 🚢 V2 et évolutions futures
+## 🚀 Déploiement & Performance
+
+- ✅ Zero-dépendance (CDN Leaflet seulement)
+- ✅ Modules ES6 statiques (pas de build)
+- ✅ Logs debug dans console (window.app, window.mapManager)
+- ✅ Gestion erreurs API avec messages utilisateur
+
+## 🚀 Évolutions futures possibles
 
 - Ajouter 2 pages supplémentaires (navigation principale)
 - Filtrer les bateaux par type
