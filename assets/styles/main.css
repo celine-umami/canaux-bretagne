@@ -5,7 +5,8 @@
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     width: 100%;
     height: 100%;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -22,9 +23,9 @@ html, body {
 
 /* Header - Mobile first */
 .app-header {
-    background-color: #1a1a1a;
+    background-color: #000;
     border-bottom: 2px solid #333;
-    padding: 1rem;
+    padding: 6px 0 8px 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     z-index: 100;
 }
@@ -34,12 +35,12 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 50px;
+    height: auto;
 }
 
 .header-logo {
-    max-height: 50px;
-    max-width: 150px;
+    height: 44px;
+    width: auto;
     object-fit: contain;
     object-position: center;
 }
@@ -144,6 +145,7 @@ html, body {
     from {
         transform: translateY(100%);
     }
+
     to {
         transform: translateY(0);
     }
@@ -198,34 +200,113 @@ html, body {
     gap: 1rem;
 }
 
-.boat-item {
-    border: 1px solid #e0e0e0;
+.boat-card {
     border-radius: 8px;
-    padding: 1rem;
-    background-color: #fafafa;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgb(217, 217, 217);
+    background-color: #FFF;
+    overflow: hidden;
 }
 
-.boat-item:active {
-    background-color: #f0f0f0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.boat-card-header {
+    padding: 15px 7px 10px 7px;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
 }
 
-.boat-name {
+.boat-card-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.boat-card-center-img-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.boat-card-img-boat {
+    width: 17px;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+}
+
+.boat-card-name-boat {
+    color: rgb(30, 30, 30);
+    font-size: 14px;
     font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
+    line-height: 120%;
+    letter-spacing: -0.28px;
 }
 
-.boat-detail {
-    font-size: 0.875rem;
-    color: #666;
-    margin: 0.25rem 0;
+.boat-card-type-boat {
+    padding: 4px 8px;
+    color: rgb(44, 44, 44);
+    font-family: "Open Sans";
+    font-size: 11px;
+    line-height: 100%;
+    background-color: rgb(245, 245, 245);
+    border-radius: 120px;
+    width: fit-content;
 }
 
-.boat-detail strong {
-    color: #1a1a1a;
+.boat-card-tag-direction {
+    padding: 2px 10px 2px 2px;
+    background-color: rgb(245, 245, 245);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 120px;
+}
+
+.boat-card-tag-direction-letter {
+    border-radius: 50%;
+    color: #000;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+}
+
+.boat-card-tag-direction-text {
+    color: #000;
+    font-family: "Open Sans";
+    font-size: 12px;
+    letter-spacing: -0.24px;
+    line-height: 90%;
+}
+
+.boat-card-body {
+    padding: 6px 8px 8px 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 8px 16px;
+}
+
+.boat-card-detail {}
+
+.boat-card-img-title {
+    height: 13px;
+    width: auto;
+    object-fit: contain;
+    object-position: center;
+}
+
+.boat-card-detail-title {
+    color: rgb(117, 117, 117);
+    font-size: 13px;
+    line-height: 140%;
+}
+
+.boat-card-detail-info {
+    color: #000;
+    font-size: 12px;
+    line-height: 140%;
 }
 
 /* Utilitaires */

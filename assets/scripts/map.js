@@ -35,6 +35,9 @@ class MapManager {
                 maxNativeZoom: 18
             }).addTo(this.map);
 
+            // ajoute le contrôle de plein écran
+            this.map.addControl(new L.Control.FullScreen());
+
             // Créer des couches pour les éléments
             this.pathLayer = L.featureGroup().addTo(this.map);
             this.markersLayer = L.featureGroup().addTo(this.map);
@@ -87,7 +90,7 @@ class MapManager {
         locks.forEach(lock => {
             // Parser geo_point "lat, lng" en coordonnées
             const [lat, lng] = lock.geo_point.split(',').map(coord => parseFloat(coord.trim()));
-            
+
             if (isNaN(lat) || isNaN(lng)) {
                 console.warn('Coordonnées invalides pour écluse:', lock.nom);
                 return;
@@ -103,7 +106,7 @@ class MapManager {
                 <small>Numéro: ${lock.num_ecluse}</small><br/>
                 <small>Sens: ${lock.sens || 'N/A'}</small>
             `);
-            
+
             marker.addTo(this.markersLayer);
         });
     }
@@ -121,7 +124,7 @@ class MapManager {
             if (!name) return;
 
             const existing = boatsByName.get(name);
-            
+
             // Comparer les timestamps idtech
             if (!existing) {
                 boatsByName.set(name, boat);
@@ -129,10 +132,10 @@ class MapManager {
                 // Garder le plus récent (idtech le plus grand)
                 const existingTime = new Date(existing.idtech).getTime();
                 const newTime = new Date(boat.idtech).getTime();
-                
+
                 if (newTime > existingTime) {
                     boatsByName.set(name, boat);
-                } 
+                }
             }
         });
 
@@ -173,12 +176,12 @@ class MapManager {
 
             // Clé pour identifier le bief: "numEcluse|sens"
             const biefKey = `${numEcluse}|${sens}`;
-            
+
             if (!boatsByBief.has(biefKey)) {
                 boatsByBief.set(biefKey, []);
             }
             boatsByBief.get(biefKey).push(boat);
-            
+
         });
 
         return boatsByBief;
@@ -194,7 +197,7 @@ class MapManager {
     findBiefLocks(numEcluse, sens, locks) {
         // Trouver l'écluse actuelle
         const currentLock = locks.find(l => l.num_ecluse === numEcluse);
-        
+
         if (!currentLock) return null;
 
         if (sens === "Montant") {
@@ -236,7 +239,7 @@ class MapManager {
             boatsByBief.forEach((boatsInBief, biefKey) => {
                 const [numEcluseStr, sens] = biefKey.split('|');
                 const numEcluse = parseInt(numEcluseStr, 10);
-                
+
                 // Trouver les deux écluses du bief
                 const biefLocks = this.findBiefLocks(numEcluse, sens, locks);
                 if (!biefLocks) {
@@ -247,12 +250,20 @@ class MapManager {
                 // Placer un marqueur aléatoire entre les deux écluses
                 const [lat1, lng1] = biefLocks.lock1.geo_point.split(',').map(c => parseFloat(c.trim()));
                 const [lat2, lng2] = biefLocks.lock2.geo_point.split(',').map(c => parseFloat(c.trim()));
-                
+
                 const [markerLat, markerLng] = this.getRandomPointBetween(lat1, lng1, lat2, lng2);
+
+
+                // compte le nombre de bateux par direction
+                const countByDirection = boatsInBief.reduce((acc, boat) => {
+                    const direction = boat.sens || 'Inconnu';
+                    acc[direction] = (acc[direction] || 0) + 1;
+                    return acc;
+                }, {});
 
                 // Créer le marqueur
                 const marker = L.marker([markerLat, markerLng], {
-                    icon: this.createBoatIcon(),
+                    icon: this.createBoatIcon(countByDirection['Montant'], countByDirection['Descendant']),
                     title: `${boatsInBief.length} bateau(x)`
                 });
 
@@ -265,6 +276,8 @@ class MapManager {
 
                 marker.addTo(this.markersLayer);
                 this.currentMarkers.push(marker);
+
+                // L.marker([markerLat, markerLng]).addTo(this.markersLayer);
             });
         } catch (error) {
             console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
@@ -273,12 +286,30 @@ class MapManager {
 
     /**
      * Crée une icône personnalisée pour les bateaux
+     * @param {number} nbMontant - Nombre de bateaux montant
+     * @param {number} nbDescendant - Nombre de bateaux descendant
      * @returns {L.DivIcon} Icône customisée
      */
-    createBoatIcon() {
+    createBoatIcon(nbMontant = 0, nbDescendant = 0) {
         return L.divIcon({
             className: 'custom-icon boat-icon',
-            html: '<img src="/assets/images/icons/boat.svg" alt="Bateau" style="width: 100%; height: 100%; object-fit: contain;">',
+            html: `
+                <div style="position:relative; width:100%; height:100%;">
+                    <img src="/assets/images/icons/boat.svg" alt="Bateau" style="width: 100%; height: 100%; object-fit: contain;">
+                    ${nbMontant > 0 || nbDescendant > 0 ? `
+                        <div class="marker-infos">
+                            ${nbDescendant > 0 ? `<div class="marker-direction">
+                                <p class="marker-letter" style="background-color: #AFCB56;">D</p>
+                                <p class="marker-count">${nbDescendant}</p>
+                            </div>` : ""}
+                            ${nbMontant > 0 ? `<div class="marker-direction">
+                                <p class="marker-letter" style="background-color: #F1B453;">M</p>
+                                <p class="marker-count">${nbMontant}</p>
+                            </div>` : ""}
+                        </div>`
+                    : ""}
+                </div>
+            `,
             iconSize: [32, 32],
             iconAnchor: [16, 16],
             popupAnchor: [0, -16]

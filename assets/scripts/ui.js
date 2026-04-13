@@ -1,3 +1,4 @@
+import { createBoatDetailsCard } from "./ui/boatsCardDetails.js";
 /**
  * Module de gestion de l'interface utilisateur
  * Gère les interactions DOM, le dropdown et la modal
@@ -41,24 +42,6 @@ class UIManager {
         window.addEventListener('orientationchange', () => {
             this.handleOrientationChange();
         });
-    }
-
-    /**
-     * Extrait l'heure d'un timestamp ISO 8601
-     * @param {string} timestamp - Format: 2026-03-13T10:56:06.683+01:00
-     * @returns {string} L'heure au format HH:MM:SS
-     */
-    extractTimeFromTimestamp(timestamp) {
-        if (!timestamp) return 'N/A';
-        try {
-            // Extraire la partie heure du timestamp
-            const timePart = timestamp.split('T')[1]; // "10:56:06.683+01:00"
-            const time = timePart.split('.')[0]; // "10:56:06"
-            return time;
-        } catch (error) {
-            console.error('Erreur extraction heure:', error);
-            return timestamp;
-        }
     }
 
     /**
@@ -125,16 +108,7 @@ class UIManager {
                 '<p style="text-align: center; color: #999;">Pas de bateaux à cet endroit</p>';
         } else {
             boats.forEach(boat => {
-                const boatEl = document.createElement('div');
-                boatEl.className = 'boat-item';
-                boatEl.innerHTML = `
-                    <div class="boat-name">${this.escapeHtml(boat.nom_bateau)}</div>
-                    <div class="boat-detail"><strong>Eclusier:</strong> ${this.escapeHtml(boat.identite)} ${this.escapeHtml(boat.prenom)}</div>
-                    <div class="boat-detail"><strong>Type:</strong> ${this.escapeHtml(boat.type_embarcation)}</div>
-                    <div class="boat-detail"><strong>Passage:</strong> ${this.extractTimeFromTimestamp(boat.idtech)}</div>
-                    <div class="boat-detail"><strong>Sens:</strong> ${this.escapeHtml(boat.sens)}</div>
-                    <div class="boat-detail"><strong>Destination:</strong> Inconnue</div>
-                `;
+                const boatEl = createBoatDetailsCard(boat);
                 this.elements.boatsList.appendChild(boatEl);
             });
         }
@@ -191,17 +165,6 @@ class UIManager {
                 mapInstance.resize();
             }
         }, 100);
-    }
-
-    /**
-     * Utilitaire: échappe les caractères HTML
-     * @param {string} text - Texte à échapper
-     * @returns {string} Texte échappé
-     */
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 
     /**

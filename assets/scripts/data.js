@@ -57,7 +57,7 @@ export async function fetchBoatsForChannel(channelId) {
 async function fetchFromAPI(url) {
     try {
         if (API_CONFIG.DEBUG) {
-            console.log(`🔄 Fetch: ${url}`);
+            console.info(`🔄 Fetch: ${url}`);
         }
 
         // Construire les headers
@@ -69,7 +69,7 @@ async function fetchFromAPI(url) {
         if (API_CONFIG.API_KEY) {
             headers['Authorization'] = `apikey ${API_CONFIG.API_KEY}`;
             if (API_CONFIG.DEBUG) {
-                console.log(`🔐 Avec authentification API`);
+                console.info(`🔐 Avec authentification API`);
             }
         }
 
@@ -80,7 +80,7 @@ async function fetchFromAPI(url) {
         });
 
         if (API_CONFIG.DEBUG) {
-            console.log(`↳ Status: ${response.status}`);
+            console.info(`↳ Status: ${response.status}`);
         }
 
         if (!response.ok) {
@@ -92,7 +92,7 @@ async function fetchFromAPI(url) {
         const data = await response.json();
 
         if (API_CONFIG.DEBUG) {
-            console.log(`✓ Données reçues:`, data);
+            console.info(`✓ Données reçues:`, data);
         }
 
         return data;
