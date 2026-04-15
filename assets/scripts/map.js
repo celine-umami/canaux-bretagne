@@ -12,6 +12,7 @@ class MapManager {
         this.pathLayer = null;
         this.markersLayer = null;
         this.currentMarkers = [];
+        this.lockMarkers = [];
         this.boatsClickHandlers = new Map();
     }
 
@@ -87,6 +88,8 @@ class MapManager {
             return;
         }
 
+        this.lockMarkers = []; // Réinitialiser les marqueurs d'écluse
+
         locks.forEach(lock => {
             // Parser geo_point "lat, lng" en coordonnées
             const [lat, lng] = lock.geo_point.split(',').map(coord => parseFloat(coord.trim()));
@@ -103,11 +106,10 @@ class MapManager {
 
             marker.bindPopup(`
                 <strong>${lock.nom_formulaire || lock.nom}</strong><br/>
-                <small>Numéro: ${lock.num_ecluse}</small><br/>
-                <small>Sens: ${lock.sens || 'N/A'}</small>
             `);
 
             marker.addTo(this.markersLayer);
+            this.lockMarkers.push(marker); // Stocker le marqueur
         });
     }
 
@@ -144,38 +146,25 @@ class MapManager {
     }
 
     /**
-     * Génère un point aléatoire entre deux coordonnées
-     */
-    getRandomPointBetween(lat1, lng1, lat2, lng2) {
-        const offsetLat = (Math.random() - 0.5) * 0.01;
-        const offsetLng = (Math.random() - 0.5) * 0.01;
-        const randomLat = lat1 + (lat2 - lat1) * (0.3 + Math.random() * 0.4) + offsetLat;
-        const randomLng = lng1 + (lng2 - lng1) * (0.3 + Math.random() * 0.4) + offsetLng;
-        return [randomLat, randomLng];
-    }
-
-    /**
-     * Groupe les bateaux par bief (paire d'écluses)
+     * Groupe les bateaux par bief (numéro d'écluse)
      * @param {Array} boats - Tableau des bateaux
      * @param {Array} locks - Tableau des écluses
-     * @returns {Map} Map avec clé "numEcluse|sens" et valeur = tableau de bateaux
+     * @returns {Map} Map avec clé "numEcluse" et valeur = tableau de bateaux (montant et descendant)
      */
     groupBoatsByBief(boats, locks) {
         const boatsByBief = new Map();
 
-
-        // Grouper les bateaux par bief
+        // Grouper les bateaux par bief (regroupe montant et descendant ensemble)
         boats.forEach(boat => {
             const numEcluse = boat.num_ecluse;
-            const sens = boat.sens;
 
-            if (numEcluse === null || numEcluse === undefined || !sens) {
-                console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse ou sens`);
+            if (numEcluse === null || numEcluse === undefined) {
+                console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse`);
                 return;
             }
 
-            // Clé pour identifier le bief: "numEcluse|sens"
-            const biefKey = `${numEcluse}|${sens}`;
+            // Clé pour identifier le bief: juste le numéro d'écluse (regroupe montant et descendant)
+            const biefKey = `${numEcluse}`;
 
             if (!boatsByBief.has(biefKey)) {
                 boatsByBief.set(biefKey, []);
@@ -185,30 +174,6 @@ class MapManager {
         });
 
         return boatsByBief;
-    }
-
-    /**
-     * Trouve les coordonnées des deux écluses d'un bief
-     * @param {number} numEcluse - Numéro de l'écluse
-     * @param {string} sens - Direction (Montant ou Descendant)
-     * @param {Array} locks - Tableau de toutes les écluses
-     * @returns {Object|null} {lock1, lock2} ou null si non trouvable
-     */
-    findBiefLocks(numEcluse, sens, locks) {
-        // Trouver l'écluse actuelle
-        const currentLock = locks.find(l => l.num_ecluse === numEcluse);
-
-        if (!currentLock) return null;
-
-        if (sens === "Montant") {
-            // Montant: chercher l'écluse suivante (numéro + 1)
-            const nextLock = locks.find(l => l.num_ecluse === numEcluse + 1);
-            return nextLock ? { lock1: currentLock, lock2: nextLock } : null;
-        } else {
-            // Descendant: chercher l'écluse précédente (numéro - 1)
-            const prevLock = locks.find(l => l.num_ecluse === numEcluse - 1);
-            return prevLock ? { lock1: prevLock, lock2: currentLock } : null;
-        }
     }
 
     /**
@@ -228,7 +193,7 @@ class MapManager {
             // Dédupliquer les bateaux (garder le plus récent par nom)
             const deduplicatedBoats = this.deduplicateBoats(boats);
 
-            // Grouper les bateaux par bief
+            // Grouper les bateaux par bief (regroupe montant et descendant ensemble)
             const boatsByBief = this.groupBoatsByBief(deduplicatedBoats, locks);
 
             if (boatsByBief.size === 0) {
@@ -237,37 +202,44 @@ class MapManager {
 
             // Créer les marqueurs pour chaque bief
             boatsByBief.forEach((boatsInBief, biefKey) => {
-                const [numEcluseStr, sens] = biefKey.split('|');
-                const numEcluse = parseInt(numEcluseStr, 10);
+                const numEcluse = parseInt(biefKey, 10);
 
-                // Trouver les deux écluses du bief
-                const biefLocks = this.findBiefLocks(numEcluse, sens, locks);
-                if (!biefLocks) {
-                    console.warn(`⚠️ Biefs locks non trouvés pour: #${numEcluse} (${sens})`);
+                // Chercher les deux écluses (montant et descendant) pour ce numéro d'écluse
+                const lockMontant = locks.find(l => l.num_ecluse === numEcluse && l.sens === "Montant");
+                const lockDescendant = locks.find(l => l.num_ecluse === numEcluse && l.sens === "Descendant");
+
+                if ((!lockMontant || !lockMontant.point_geo_bief) && (!lockDescendant || !lockDescendant.point_geo_bief)) {
+                    console.warn(`⚠️ Aucune écluse trouvée avec point_geo_bief pour num_ecluse: #${numEcluse}`);
                     return;
                 }
 
-                // Placer un marqueur aléatoire entre les deux écluses
-                const [lat1, lng1] = biefLocks.lock1.geo_point.split(',').map(c => parseFloat(c.trim()));
-                const [lat2, lng2] = biefLocks.lock2.geo_point.split(',').map(c => parseFloat(c.trim()));
+                // Utiliser le point_geo_bief montant si disponible, sinon descendant
+                let markerLat, markerLng;
+                
+                if (lockMontant?.point_geo_bief) {
+                    // Priorité au point montant
+                    markerLat = lockMontant.point_geo_bief.lat;
+                    markerLng = lockMontant.point_geo_bief.lon;
+                } else if (lockDescendant?.point_geo_bief) {
+                    // Fallback au point descendant
+                    markerLat = lockDescendant.point_geo_bief.lat;
+                    markerLng = lockDescendant.point_geo_bief.lon;
+                }
 
-                const [markerLat, markerLng] = this.getRandomPointBetween(lat1, lng1, lat2, lng2);
-
-
-                // compte le nombre de bateux par direction
+                // Compter les bateaux par direction
                 const countByDirection = boatsInBief.reduce((acc, boat) => {
                     const direction = boat.sens || 'Inconnu';
                     acc[direction] = (acc[direction] || 0) + 1;
                     return acc;
                 }, {});
 
-                // Créer le marqueur
+                // Créer le marqueur avec les totaux montant et descendant
                 const marker = L.marker([markerLat, markerLng], {
                     icon: this.createBoatIcon(countByDirection['Montant'], countByDirection['Descendant']),
                     title: `${boatsInBief.length} bateau(x)`
                 });
 
-                // Ajouter un callback pour le clic
+                // Ajouter un callback pour le clic - passer tous les bateaux du bief
                 marker.on('click', () => {
                     if (onBoatClick) {
                         onBoatClick(boatsInBief);
@@ -276,8 +248,6 @@ class MapManager {
 
                 marker.addTo(this.markersLayer);
                 this.currentMarkers.push(marker);
-
-                // L.marker([markerLat, markerLng]).addTo(this.markersLayer);
             });
         } catch (error) {
             console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
@@ -324,14 +294,50 @@ class MapManager {
         return L.divIcon({
             className: 'custom-icon lock-icon',
             html: '',
-            iconSize: [36, 36],
-            iconAnchor: [18, 18],
-            popupAnchor: [0, -18]
+            iconSize: [3, 3],
+            iconAnchor: [1, 1],
+            popupAnchor: [0, -3]
         });
     }
 
     /**
-     * Charge tous les éléments pour un canal (tracé, écluses, bateaux)
+     * Configure la visibilité des marqueurs d'écluse en fonction du zoom
+     * Les marqueurs d'écluse deviennent progressivement moins visibles au dézoom
+     */
+    setupLockMarkersZoomListener() {
+        const updateLockMarkersOpacity = () => {
+            const currentZoom = this.map.getZoom();
+            
+            // Opacité basée sur le zoom: moins visible au dézoom
+            // A zoom 8: opacité = 0 (invisible)
+            // A zoom 10: opacité = 0.3
+            // A zoom 12: opacité = 0.6
+            // A zoom 13+: opacité = 1
+            let opacity = 0;
+            if (currentZoom >= 13) {
+                opacity = 1;
+            } else if (currentZoom >= 12) {
+                opacity = 0.8;
+            } else if (currentZoom >= 10) {
+                opacity = 0.4;
+            }
+            
+            this.lockMarkers.forEach(marker => {
+                const element = marker.getElement();
+                if (element) {
+                    element.style.opacity = opacity;
+                }
+            });
+        };
+
+        // Appeler une première fois
+        updateLockMarkersOpacity();
+
+        // Mettre à jour à chaque changement de zoom
+        this.map.on('zoomend', updateLockMarkersOpacity);
+    }
+
+    /**
      * @param {Object} channel - L'objet canal
      * @param {Function} onBoatClick - Callback pour le clic sur un bateau
      */
@@ -341,11 +347,12 @@ class MapManager {
         try {
             // Charger les écluses et bateaux en parallèle
             const [locks, boats] = await Promise.all([
-                fetchLocksForChannel(channel.voie_navigable),
-                fetchBoatsForChannel(channel.voie_navigable)
+                fetchLocksForChannel(channel),
+                fetchBoatsForChannel(channel)
             ]);
 
             this.addLocks(locks.results);
+            this.setupLockMarkersZoomListener();
             this.addBoats(boats.results, locks.results, onBoatClick);
 
 
@@ -369,7 +376,13 @@ class MapManager {
     clearMarkers() {
         this.markersLayer.clearLayers();
         this.currentMarkers = [];
+        this.lockMarkers = [];
         this.boatsClickHandlers.clear();
+        
+        // Retirer les listeners de zoom
+        if (this.map) {
+            this.map.off('zoomend');
+        }
     }
 
     /**

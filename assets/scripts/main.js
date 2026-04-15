@@ -19,11 +19,11 @@ class Application {
 
     /**
      * Trouve un canal par son ID
-     * @param {string} channelId - L'ID du canal
+     * @param {string} channelId - L'ID unique du canal (voie_navigable ou voie_navigable_section_X)
      * @returns {Object|null} Le canal trouvé ou null
      */
     getChannelById(channelId) {
-        return this.channels.results.find(ch => ch.voie_navigable === channelId) || null;
+        return this.channels.results.find(ch => (ch.id || ch.voie_navigable) === channelId) || null;
     }
 
     /**
@@ -46,7 +46,7 @@ class Application {
             );
 
             // Charger le canal par défaut (le premier de la liste)
-            await this.loadChannel(this.channels.results[0].voie_navigable);
+            await this.loadChannel(this.channels.results[0]);
         } catch (error) {
             this.uiManager.showError('Erreur lors de l\'initialisation de l\'application');
             console.error(error);
@@ -55,17 +55,14 @@ class Application {
 
     /**
      * Charge un canal et affiche ses données
-     * @param {string} channelId - L'ID du canal à charger
+     * @param {Object} channel - L'objet canal à charger
      */
-    async loadChannel(channelId) {
+    async loadChannel(channel) {
         try {
             this.uiManager.showLoading();
 
-            // Récupérer les données du canal
-            const channel = this.getChannelById(channelId);
-
             if (!channel) {
-                throw new Error(`Canal ${channelId} non trouvé`);
+                throw new Error(`Canal non valide`);
             }
 
             this.currentChannel = channel;
@@ -76,7 +73,9 @@ class Application {
             );
 
             // Récupérer les bateaux pour les utiliser later
-            this.boats = await fetchBoatsForChannel(channelId);
+            this.boats = await fetchBoatsForChannel(channel);
+            console.log("🚀 --- Application --- this.boats :", this.boats );
+
 
 
             this.uiManager.hideLoading();
@@ -89,10 +88,13 @@ class Application {
 
     /**
      * Gère le changement de canal via le dropdown
-     * @param {string} channelId - Le nouvel ID du canal sélectionné
+     * @param {string} channelId - L'ID unique du canal sélectionné
      */
     async handleChannelChange(channelId) {
-        await this.loadChannel(channelId);
+        const channel = this.getChannelById(channelId);
+        if (channel) {
+            await this.loadChannel(channel);
+        }
     }
 
     /**

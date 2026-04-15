@@ -57,15 +57,20 @@ class UIManager {
         // Ajouter les options
         channels.forEach(channel => {
             const option = document.createElement('option');
-            // Adapter au format de l'API qui utilise voie_navigable
-            option.value = channel.voie_navigable || channel.id;
-            option.textContent = channel.voie_navigable || channel.name;
+            // Utiliser displayName si disponible (pour les sections), sinon voie_navigable
+            const displayText = channel.displayName || channel.voie_navigable;
+            // Utiliser id comme value si disponible, sinon voie_navigable
+            const value = channel.id || channel.voie_navigable;
+            
+            option.value = value;
+            option.textContent = displayText;
             this.elements.channelSelect.appendChild(option);
         });
 
         // Sélectionner le premier canal par défaut
         if (channels.length > 0) {
-            this.elements.channelSelect.value = channels[0].voie_navigable || channels[0].id;
+            const firstChannelValue = channels[0].id || channels[0].voie_navigable;
+            this.elements.channelSelect.value = firstChannelValue;
         }
 
         // Écouter les changements
