@@ -4,6 +4,7 @@
  */
 
 import { fetchLocksForChannel, fetchBoatsForChannel } from './data.js';
+import { filterBoatsByToday } from './utils/dateTimeutils.js';
 
 class MapManager {
     constructor(containerId) {
@@ -193,6 +194,14 @@ class MapManager {
             // Dédupliquer les bateaux (garder le plus récent par nom)
             const deduplicatedBoats = this.deduplicateBoats(boats);
 
+            // Filtrer les bateaux pour ne garder que ceux d'aujourd'hui
+            // const boatsToday = filterBoatsByToday(deduplicatedBoats);
+
+            // if (boatsToday.length === 0) {
+            //     console.warn("⚠️ Aucun bateau aujourd'hui");
+            //     return;
+            // }
+
             // Grouper les bateaux par bief (regroupe montant et descendant ensemble)
             const boatsByBief = this.groupBoatsByBief(deduplicatedBoats, locks);
 
@@ -313,13 +322,13 @@ class MapManager {
             // A zoom 10: opacité = 0.3
             // A zoom 12: opacité = 0.6
             // A zoom 13+: opacité = 1
-            let opacity = 0;
+            let opacity = 0.4;
             if (currentZoom >= 13) {
                 opacity = 1;
             } else if (currentZoom >= 12) {
                 opacity = 0.8;
             } else if (currentZoom >= 10) {
-                opacity = 0.4;
+                opacity = 0.6;
             }
             
             this.lockMarkers.forEach(marker => {
