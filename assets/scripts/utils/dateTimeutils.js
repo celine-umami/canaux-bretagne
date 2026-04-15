@@ -32,6 +32,7 @@ export function filterBoatsByToday(boats) {
     }
 
     const today = new Date();
+
     today.setHours(0, 0, 0, 0);
 
     return boats.filter(boat => {
@@ -39,8 +40,11 @@ export function filterBoatsByToday(boats) {
         
         try {
             const boatDate = new Date(boat.idtech);
+            console.log("🚀 --- boatDate:", boatDate);
+
             boatDate.setHours(0, 0, 0, 0);
-            
+                console.log("🚀 --- today:", today);
+
             return boatDate.getTime() === today.getTime();
         } catch (error) {
             console.error('Erreur filtre date:', error);

@@ -4,7 +4,6 @@
  */
 
 import { fetchLocksForChannel, fetchBoatsForChannel } from './data.js';
-import { filterBoatsByToday } from './utils/dateTimeutils.js';
 
 class MapManager {
     constructor(containerId) {
@@ -194,14 +193,7 @@ class MapManager {
             // Dédupliquer les bateaux (garder le plus récent par nom)
             const deduplicatedBoats = this.deduplicateBoats(boats);
 
-            // Filtrer les bateaux pour ne garder que ceux d'aujourd'hui
-            // const boatsToday = filterBoatsByToday(deduplicatedBoats);
-
-            // if (boatsToday.length === 0) {
-            //     console.warn("⚠️ Aucun bateau aujourd'hui");
-            //     return;
-            // }
-
+            // Les bateaux sont déjà filtrés par la requête API pour aujourd'hui
             // Grouper les bateaux par bief (regroupe montant et descendant ensemble)
             const boatsByBief = this.groupBoatsByBief(deduplicatedBoats, locks);
 

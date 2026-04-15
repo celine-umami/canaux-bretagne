@@ -1,5 +1,5 @@
 import { createBoatDetailsCard } from "./ui/boatsCardDetails.js";
-import { filterBoatsByToday, sortBoatsByTimeDescending } from "./utils/dateTimeutils.js";
+import { sortBoatsByTimeDescending } from "./utils/dateTimeutils.js";
 /**
  * Module de gestion de l'interface utilisateur
  * Gère les interactions DOM, le dropdown et la modal
@@ -104,20 +104,17 @@ class UIManager {
 
     /**
      * Affiche la modal avec les détails des bateaux
-     * @param {Array} boats - Liste des bateaux à afficher
+     * @param {Array} boats - Liste des bateaux à afficher (déjà filtrés par jour via l'API)
      */
     showBoatsModal(boats) {
         this.elements.boatsList.innerHTML = '';
 
-        // Filtrer les bateaux pour aujourd'hui uniquement
-        const boatsToday = filterBoatsByToday(boats);
-        
-        if (boatsToday.length === 0) {
+        if (boats.length === 0) {
             this.elements.boatsList.innerHTML =
-                '<p style="text-align: center; color: #999;">Pas de bateaux à cet endroit aujourd\'hui</p>';
+                '<p style="text-align: center; color: #999;">Pas de bateaux à cet endroit</p>';
         } else {
             // Trier les bateaux par heure décroissante (plus récents d'abord)
-            const sortedBoats = sortBoatsByTimeDescending(boatsToday);
+            const sortedBoats = sortBoatsByTimeDescending(boats);
             
             sortedBoats.forEach(boat => {
                 const boatEl = createBoatDetailsCard(boat);

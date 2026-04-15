@@ -131,7 +131,7 @@ export async function fetchLocksForChannel(channel) {
 }
 
 /**
- * Récupère les bateaux présents sur un canal
+ * Récupère les bateaux présents sur un canal pour aujourd'hui uniquement
  * @param {string|Object} channel - Soit un nom de canal (string), soit un objet channel avec voie_navigable
  */
 export async function fetchBoatsForChannel(channel) {
@@ -147,7 +147,20 @@ export async function fetchBoatsForChannel(channel) {
         }
         
         channelName = channelName === "Blavet" ? "Canal du Blavet" : channelName;
-        const whereClause = encodeURIComponent(`voie_navigable="${channelName}"`);
+        
+        // Calculer les dates pour le filtre (aujourd'hui)
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        // Format ISO: YYYY-MM-DD
+        const todayStr = today.toISOString().split('T')[0];
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        
+        // Filtrer par voie_navigable et par date (bateaux d'aujourd'hui)
+        const whereClause = encodeURIComponent(
+            `voie_navigable="${channelName}" AND date >= date'${todayStr}' AND date < date'${tomorrowStr}'`
+        );
         const url = `${API_CONFIG.DATA_URL}?where=${whereClause}&limit=100`;
 
         return await fetchFromAPI(url);
