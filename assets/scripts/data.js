@@ -131,10 +131,11 @@ export async function fetchLocksForChannel(channel) {
 }
 
 /**
- * Récupère les bateaux présents sur un canal pour aujourd'hui uniquement
+ * Récupère les bateaux présents sur un canal
  * @param {string|Object} channel - Soit un nom de canal (string), soit un objet channel avec voie_navigable
+ * @param {Date} targetDate - (Optionnel) Date spécifique pour filtrer les bateaux. Si null, récupère hier + aujourd'hui
  */
-export async function fetchBoatsForChannel(channel) {
+export async function fetchBoatsForChannel(channel, targetDate = null) {
     try {
         let channelName;
         
@@ -148,22 +149,39 @@ export async function fetchBoatsForChannel(channel) {
         
         channelName = channelName === "Blavet" ? "Canal du Blavet" : channelName;
         
-        // Calculer les dates pour le filtre (hier et aujourd'hui)
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        let whereClause;
         
-        // Format ISO: YYYY-MM-DD
-        const todayStr = today.toISOString().split('T')[0];
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        if (targetDate) {
+            // Filtrer sur une date spécifique
+            const targetDateStr = targetDate.toISOString().split('T')[0];
+            const nextDate = new Date(targetDate);
+            nextDate.setDate(nextDate.getDate() + 1);
+            const nextDateStr = nextDate.toISOString().split('T')[0];
+            
+            // Exclure les canoës/kayaks du filtrage
+            whereClause = encodeURIComponent(
+                `voie_navigable="${channelName}" AND date >= date'${targetDateStr}' AND date < date'${nextDateStr}' AND type_embarcation != "Canoë / Kayak"`
+            );
+        } else {
+            // Comportement par défaut: hier et aujourd'hui
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            // Format ISO: YYYY-MM-DD
+            const todayStr = today.toISOString().split('T')[0];
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+            
+            // Filtrer par voie_navigable et par date (bateaux d'hier et d'aujourd'hui)
+            // Exclure les canoës/kayaks du filtrage
+            whereClause = encodeURIComponent(
+                `voie_navigable="${channelName}" AND date >= date'${todayStr}' AND date < date'${tomorrowStr}' AND type_embarcation != "Canoë / Kayak"`
+            );
+        }
         
-        // Filtrer par voie_navigable et par date (bateaux d'hier et d'aujourd'hui)
-        const whereClause = encodeURIComponent(
-            `voie_navigable="${channelName}" AND date >= date'${todayStr}' AND date < date'${tomorrowStr}'`
-        );
         const url = `${API_CONFIG.DATA_URL}?where=${whereClause}&limit=100`;
 
         return await fetchFromAPI(url);

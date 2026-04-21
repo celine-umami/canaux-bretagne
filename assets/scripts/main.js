@@ -3,10 +3,26 @@
  * Orchestration entre les différents modules
  */
 
-import { fetchChannel, fetchBoatsForChannel } from './data.js';
+import { fetchChannel, fetchBoatsForChannel, fetchLocksForChannel } from './data.js';
 import { logConfig } from './config.js';
 import MapManager from './map.js';
 import UIManager from './ui.js';
+
+/**
+ * Formate une date au format "XX mois XXXX"
+ * @param {Date} date - La date à formater
+ * @returns {string} La date formatée
+ */
+function formatDateToFrench(date) {
+    const months = [
+        'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+    ];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+}
 
 class Application {
     constructor() {
@@ -15,6 +31,7 @@ class Application {
         this.channels = [];
         this.currentChannel = null;
         this.boats = [];
+        this.locks = [];
     }
 
     /**
@@ -31,6 +48,9 @@ class Application {
      */
     async init() {
         try {
+
+            // Initialiser le footer
+            this.initFooter();
 
             // Récupérer la liste des canaux (dynamique ou mock)
             this.channels = await fetchChannel();
@@ -54,6 +74,60 @@ class Application {
     }
 
     /**
+     * Initialise le footer avec les dates
+     */
+    initFooter() {
+        // Gérer la date de aujourd'hui et hier
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        // Formater les dates
+        const todayStr = formatDateToFrench(today);
+        const yesterdayStr = formatDateToFrench(yesterday);
+
+        // Remplir les boutons
+        const btnToday = document.getElementById('btn-today');
+        const btnYesterday = document.getElementById('btn-yesterday');
+
+        if (btnToday) {
+            btnToday.textContent = todayStr;
+        }
+
+        // Ajouter les event listeners
+        const btnHome = document.querySelector('.footer-home');
+        if (btnHome) {
+            btnHome.addEventListener('click', () => {
+                console.log('Bouton Accueil cliqué');
+                // À implémenter: navigation vers page d'accueil
+            });
+        }
+
+        if (btnToday) {
+            btnToday.addEventListener('click', () => {
+                // Activer le bouton today
+                if (btnYesterday) btnYesterday.classList.remove('active');
+                btnToday.classList.add('active');
+                
+                const today = new Date();
+                this.reloadBoatsForDate(today);
+            });
+        }
+
+        if (btnYesterday) {
+            btnYesterday.addEventListener('click', () => {
+                // Activer le bouton yesterday
+                if (btnToday) btnToday.classList.remove('active');
+                btnYesterday.classList.add('active');
+                
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                this.reloadBoatsForDate(yesterday);
+            });
+        }
+    }
+
+    /**
      * Charge un canal et affiche ses données
      * @param {Object} channel - L'objet canal à charger
      */
@@ -71,6 +145,10 @@ class Application {
             await this.mapManager.loadChannel(channel, (boat) =>
                 this.handleBoatClick(boat)
             );
+
+            // Récupérer et stocker les écluses pour les utiliser plus tard
+            const locksResponse = await fetchLocksForChannel(channel);
+            this.locks = locksResponse.results || [];
 
             // Récupérer les bateaux pour les utiliser later
             this.boats = await fetchBoatsForChannel(channel);
@@ -93,6 +171,38 @@ class Application {
         const channel = this.getChannelById(channelId);
         if (channel) {
             await this.loadChannel(channel);
+        }
+    }
+
+    /**
+     * Recharge les bateaux pour une date spécifique
+     * @param {Date} targetDate - La date pour laquelle afficher les bateaux
+     */
+    async reloadBoatsForDate(targetDate) {
+        try {
+            this.uiManager.showLoading();
+
+            if (!this.currentChannel) {
+                throw new Error('Aucun canal sélectionné');
+            }
+
+            // Récupérer les bateaux pour la date spécifiée
+            const boatsResponse = await fetchBoatsForChannel(this.currentChannel, targetDate);
+            this.boats = boatsResponse.results || [];
+
+            // Appeler loadChannel en passant les locks et bateaux déjà chargés
+            // Cela gère le nettoyage propre des marqueurs et l'ajout des nouveaux
+            await this.mapManager.loadChannel(
+                this.currentChannel,
+                (boatGroup) => this.handleBoatClick(boatGroup),
+                this.locks,
+                this.boats
+            );
+
+            this.uiManager.hideLoading();
+        } catch (error) {
+            this.uiManager.hideLoading();
+            console.error('Erreur lors du rechargement des bateaux:', error);
         }
     }
 

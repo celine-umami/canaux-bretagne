@@ -30,8 +30,7 @@ class MapManager {
 
             // Ajouter la couche OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution:
-                    '© OpenStreetMap contributors',
+                attribution: '',
                 maxZoom: 19,
                 maxNativeZoom: 18
             }).addTo(this.map);
@@ -144,37 +143,6 @@ class MapManager {
         const deduped = Array.from(boatsByName.values());
         return deduped;
     }
-
-    // /**
-    //  * Groupe les bateaux par bief (numéro d'écluse)
-    //  * @param {Array} boats - Tableau des bateaux
-    //  * @param {Array} locks - Tableau des écluses
-    //  * @returns {Map} Map avec clé "numEcluse" et valeur = tableau de bateaux (montant et descendant)
-    //  */
-    // groupBoatsByBief(boats, locks) {
-    //     const boatsByBief = new Map();
-
-    //     // Grouper les bateaux par bief (regroupe montant et descendant ensemble)
-    //     boats.forEach(boat => {
-    //         const numEcluse = boat.num_ecluse;
-
-    //         if (numEcluse === null || numEcluse === undefined) {
-    //             console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse`);
-    //             return;
-    //         }
-
-    //         // Clé pour identifier le bief: juste le numéro d'écluse (regroupe montant et descendant)
-    //         const biefKey = `${numEcluse}`;
-
-    //         if (!boatsByBief.has(biefKey)) {
-    //             boatsByBief.set(biefKey, []);
-    //         }
-    //         boatsByBief.get(biefKey).push(boat);
-
-    //     });
-
-    //     return boatsByBief;
-    // }
 
         /**
      * Ajoute les marqueurs des bateaux
@@ -347,29 +315,36 @@ class MapManager {
     /**
      * @param {Object} channel - L'objet canal
      * @param {Function} onBoatClick - Callback pour le clic sur un bateau
+     * @param {Array} locks - (Optionnel) Écluses déjà chargées. Si omis, sont fetchées depuis l'API
+     * @param {Array} boats - (Optionnel) Bateaux déjà chargés. Si omis, sont fetchés depuis l'API
      */
-    async loadChannel(channel, onBoatClick) {
+    async loadChannel(channel, onBoatClick, locks = null, boats = null) {
         this.initMap(channel);
 
         try {
-            // Charger les écluses et bateaux en parallèle
-            const [locks, boats] = await Promise.all([
-                fetchLocksForChannel(channel),
-                fetchBoatsForChannel(channel)
-            ]);
+            // Si les locks ne sont pas fournis, les fetch depuis l'API
+            if (!locks) {
+                const locksResponse = await fetchLocksForChannel(channel);
+                locks = locksResponse.results || [];
+            }
 
-            this.addLocks(locks.results);
+            // Si les bateaux ne sont pas fournis, les fetch depuis l'API
+            if (!boats) {
+                const boatsResponse = await fetchBoatsForChannel(channel);
+                boats = boatsResponse.results || [];
+            }
+
+            this.addLocks(locks);
             this.setupLockMarkersZoomListener();
-            this.addBoats(boats.results, locks.results, onBoatClick);
-
+            this.addBoats(boats, locks, onBoatClick);
 
             // Ajuster la vue pour afficher toutes les écluses
-            if (locks && locks.results.length > 0) {
-                const bounds = locks.results.map(lock => {
+            if (locks && locks.length > 0) {
+                const bounds = locks.map(lock => {
                     const [lat, lng] = lock.geo_point.split(',').map(coord => parseFloat(coord.trim()));
                     return [lat, lng];
                 });
-                this.map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
+                this.map.fitBounds(L.latLngBounds(bounds), { padding: [20, 20] });
             }
         } catch (error) {
             console.error('Erreur lors du chargement des données de la carte:', error);
