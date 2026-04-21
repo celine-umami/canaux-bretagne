@@ -48,17 +48,21 @@
 
         <!-- Footer sticky -->
         <footer class="app-footer">
-            <button class="footer-btn footer-home" aria-label="Accueil">
+            <button class="footer-home active" aria-label="Accueil" type="button">
                 <img src="./assets/images/icons/home_icon.svg" alt="" class="footer-icon">
                 <span class="footer-text">Accueil</span>
             </button>
 
             <div class="footer-date-group">
-                <button class="footer-btn footer-date-btn" id="btn-yesterday" aria-label="Hier">
-                    Hier
+                <button class="footer-date-btn" id="btn-yesterday" aria-label="Hier" type="button">
+                    <img src="/assets/images/icons/Check.svg" alt="cocher">
+                    <p>Hier</p>
                 </button>
-                <button class="footer-btn footer-date-btn active" id="btn-today" aria-label="Aujourd'hui">
-                    <!-- Date sera générée par JavaScript -->
+                <button class="footer-date-btn active" id="btn-today" aria-label="Aujourd'hui" type="button">
+                    <img src="/assets/images/icons/Check.svg" alt="cocher">
+                    <p>
+                        <!-- Date sera générée par JavaScript -->
+                    </p>
                 </button>
             </div>
         </footer>

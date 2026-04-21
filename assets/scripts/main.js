@@ -88,10 +88,12 @@ class Application {
 
         // Remplir les boutons
         const btnToday = document.getElementById('btn-today');
+        const btnTodayText = btnToday.querySelector('p');
         const btnYesterday = document.getElementById('btn-yesterday');
 
-        if (btnToday) {
-            btnToday.textContent = todayStr;
+        if (btnTodayText) {
+            // met le texte dans la balise p à l'intérieur du bouton
+            btnTodayText.textContent = todayStr;
         }
 
         // Ajouter les event listeners
@@ -108,7 +110,7 @@ class Application {
                 // Activer le bouton today
                 if (btnYesterday) btnYesterday.classList.remove('active');
                 btnToday.classList.add('active');
-                
+
                 const today = new Date();
                 this.reloadBoatsForDate(today);
             });
@@ -119,7 +121,7 @@ class Application {
                 // Activer le bouton yesterday
                 if (btnToday) btnToday.classList.remove('active');
                 btnYesterday.classList.add('active');
-                
+
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
                 this.reloadBoatsForDate(yesterday);
