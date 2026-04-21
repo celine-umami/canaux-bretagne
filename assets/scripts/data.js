@@ -148,16 +148,19 @@ export async function fetchBoatsForChannel(channel) {
         
         channelName = channelName === "Blavet" ? "Canal du Blavet" : channelName;
         
-        // Calculer les dates pour le filtre (aujourd'hui)
+        // Calculer les dates pour le filtre (hier et aujourd'hui)
         const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
         
         // Format ISO: YYYY-MM-DD
         const todayStr = today.toISOString().split('T')[0];
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
         
-        // Filtrer par voie_navigable et par date (bateaux d'aujourd'hui)
+        // Filtrer par voie_navigable et par date (bateaux d'hier et d'aujourd'hui)
         const whereClause = encodeURIComponent(
             `voie_navigable="${channelName}" AND date >= date'${todayStr}' AND date < date'${tomorrowStr}'`
         );

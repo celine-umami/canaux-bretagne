@@ -22,38 +22,6 @@ export function extractTimeFromTimestamp(timestamp) {
 }
 
 /**
- * Filtre les bateaux pour ne garder que ceux d'aujourd'hui
- * @param {Array} boats - Liste des bateaux
- * @returns {Array} Bateaux filtrés pour aujourd'hui
- */
-export function filterBoatsByToday(boats) {
-    if (!boats || !Array.isArray(boats)) {
-        return [];
-    }
-
-    const today = new Date();
-
-    today.setHours(0, 0, 0, 0);
-
-    return boats.filter(boat => {
-        if (!boat.idtech) return false;
-        
-        try {
-            const boatDate = new Date(boat.idtech);
-            console.log("🚀 --- boatDate:", boatDate);
-
-            boatDate.setHours(0, 0, 0, 0);
-                console.log("🚀 --- today:", today);
-
-            return boatDate.getTime() === today.getTime();
-        } catch (error) {
-            console.error('Erreur filtre date:', error);
-            return false;
-        }
-    });
-}
-
-/**
  * Trie les bateaux par heure de passage décroissante (plus récents d'abord)
  * @param {Array} boats - Liste des bateaux
  * @returns {Array} Bateaux triés par heure décroissante

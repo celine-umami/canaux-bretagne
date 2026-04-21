@@ -74,7 +74,6 @@ class Application {
 
             // Récupérer les bateaux pour les utiliser later
             this.boats = await fetchBoatsForChannel(channel);
-            console.log("🚀 --- Application --- this.boats :", this.boats );
 
 
 
@@ -105,7 +104,6 @@ class Application {
         if (!Array.isArray(boats)) {
             boats = [boats];
         }
-        console.log(`Marqueur bateau cliqué avec ${boats.length} bateau(x):`, boats);
 
         // Afficher la modal avec tous les bateaux du bief
         this.uiManager.showBoatsModal(boats);

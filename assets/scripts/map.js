@@ -145,115 +145,121 @@ class MapManager {
         return deduped;
     }
 
-    /**
-     * Groupe les bateaux par bief (numéro d'écluse)
-     * @param {Array} boats - Tableau des bateaux
-     * @param {Array} locks - Tableau des écluses
-     * @returns {Map} Map avec clé "numEcluse" et valeur = tableau de bateaux (montant et descendant)
-     */
-    groupBoatsByBief(boats, locks) {
-        const boatsByBief = new Map();
+    // /**
+    //  * Groupe les bateaux par bief (numéro d'écluse)
+    //  * @param {Array} boats - Tableau des bateaux
+    //  * @param {Array} locks - Tableau des écluses
+    //  * @returns {Map} Map avec clé "numEcluse" et valeur = tableau de bateaux (montant et descendant)
+    //  */
+    // groupBoatsByBief(boats, locks) {
+    //     const boatsByBief = new Map();
 
-        // Grouper les bateaux par bief (regroupe montant et descendant ensemble)
-        boats.forEach(boat => {
-            const numEcluse = boat.num_ecluse;
+    //     // Grouper les bateaux par bief (regroupe montant et descendant ensemble)
+    //     boats.forEach(boat => {
+    //         const numEcluse = boat.num_ecluse;
 
-            if (numEcluse === null || numEcluse === undefined) {
-                console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse`);
-                return;
-            }
+    //         if (numEcluse === null || numEcluse === undefined) {
+    //             console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse`);
+    //             return;
+    //         }
 
-            // Clé pour identifier le bief: juste le numéro d'écluse (regroupe montant et descendant)
-            const biefKey = `${numEcluse}`;
+    //         // Clé pour identifier le bief: juste le numéro d'écluse (regroupe montant et descendant)
+    //         const biefKey = `${numEcluse}`;
 
-            if (!boatsByBief.has(biefKey)) {
-                boatsByBief.set(biefKey, []);
-            }
-            boatsByBief.get(biefKey).push(boat);
+    //         if (!boatsByBief.has(biefKey)) {
+    //             boatsByBief.set(biefKey, []);
+    //         }
+    //         boatsByBief.get(biefKey).push(boat);
 
-        });
+    //     });
 
-        return boatsByBief;
-    }
+    //     return boatsByBief;
+    // }
 
-    /**
-     * Ajoute les marqueurs des bateaux groupés par bief
+        /**
+     * Ajoute les marqueurs des bateaux
      * @param {Array} boats - Tableau des bateaux
      * @param {Array} locks - Tableau des écluses
      * @param {Function} onBoatClick - Callback pour le clic
      */
     addBoats(boats, locks, onBoatClick) {
 
-        if (!boats || boats.length === 0 || !locks || locks.length === 0) {
-            console.warn("⚠️ Pas de bateaux ou d'écluses");
-            return;
-        }
+    if (!boats || boats.length === 0 || !locks || locks.length === 0) {
+        console.warn("⚠️ Pas de bateaux ou d'écluses");
+        return;
+    }
 
-        try {
-            // Dédupliquer les bateaux (garder le plus récent par nom)
-            const deduplicatedBoats = this.deduplicateBoats(boats);
+    try {
+        // Dédupliquer les bateaux (garder le plus récent par nom)
+        const deduplicatedBoats = this.deduplicateBoats(boats);
 
-            // Les bateaux sont déjà filtrés par la requête API pour aujourd'hui
-            // Grouper les bateaux par bief (regroupe montant et descendant ensemble)
-            const boatsByBief = this.groupBoatsByBief(deduplicatedBoats, locks);
+        // Grouper les bateaux par position géographique (lat, lng)
+        // Les bateaux Montant/Descendant au même endroit seront ensemble
+        const boatsByGeoPosition = new Map();
 
-            if (boatsByBief.size === 0) {
-                console.warn("⚠️ Aucun bateau groupé!");
+        deduplicatedBoats.forEach(boat => {
+            const numEcluse = boat.num_ecluse;
+            const sens = boat.sens;
+
+            if (numEcluse === null || numEcluse === undefined || !sens) {
+                console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse ou sens`);
+                return;
             }
 
-            // Créer les marqueurs pour chaque bief
-            boatsByBief.forEach((boatsInBief, biefKey) => {
-                const numEcluse = parseInt(biefKey, 10);
+            // Trouver l'écluse qui correspond EXACTEMENT à ce bateau (num_ecluse + sens)
+            const lock = locks.find(l => l.num_ecluse === numEcluse && l.sens === sens);
 
-                // Chercher les deux écluses (montant et descendant) pour ce numéro d'écluse
-                const lockMontant = locks.find(l => l.num_ecluse === numEcluse && l.sens === "Montant");
-                const lockDescendant = locks.find(l => l.num_ecluse === numEcluse && l.sens === "Descendant");
+            if (!lock || !lock.point_geo_bief) {
+                console.warn(`⚠️ Écluse non trouvée ou point_geo_bief manquant pour #${numEcluse} (${sens})`);
+                return;
+            }
 
-                if ((!lockMontant || !lockMontant.point_geo_bief) && (!lockDescendant || !lockDescendant.point_geo_bief)) {
-                    console.warn(`⚠️ Aucune écluse trouvée avec point_geo_bief pour num_ecluse: #${numEcluse}`);
-                    return;
-                }
+            // Clé de position: utiliser les coordonnées géographiques
+            // Cela regroupe les bateaux à la même position physique
+            const geoKey = `${lock.point_geo_bief.lat},${lock.point_geo_bief.lon}`;
 
-                // Utiliser le point_geo_bief montant si disponible, sinon descendant
-                let markerLat, markerLng;
-                
-                if (lockMontant?.point_geo_bief) {
-                    // Priorité au point montant
-                    markerLat = lockMontant.point_geo_bief.lat;
-                    markerLng = lockMontant.point_geo_bief.lon;
-                } else if (lockDescendant?.point_geo_bief) {
-                    // Fallback au point descendant
-                    markerLat = lockDescendant.point_geo_bief.lat;
-                    markerLng = lockDescendant.point_geo_bief.lon;
-                }
-
-                // Compter les bateaux par direction
-                const countByDirection = boatsInBief.reduce((acc, boat) => {
-                    const direction = boat.sens || 'Inconnu';
-                    acc[direction] = (acc[direction] || 0) + 1;
-                    return acc;
-                }, {});
-
-                // Créer le marqueur avec les totaux montant et descendant
-                const marker = L.marker([markerLat, markerLng], {
-                    icon: this.createBoatIcon(countByDirection['Montant'], countByDirection['Descendant']),
-                    title: `${boatsInBief.length} bateau(x)`
+            if (!boatsByGeoPosition.has(geoKey)) {
+                boatsByGeoPosition.set(geoKey, {
+                    boats: [],
+                    lat: lock.point_geo_bief.lat,
+                    lng: lock.point_geo_bief.lon
                 });
+            }
 
-                // Ajouter un callback pour le clic - passer tous les bateaux du bief
-                marker.on('click', () => {
-                    if (onBoatClick) {
-                        onBoatClick(boatsInBief);
-                    }
-                });
+            boatsByGeoPosition.get(geoKey).boats.push(boat);
+        });
 
-                marker.addTo(this.markersLayer);
-                this.currentMarkers.push(marker);
+        // Créer les marqueurs pour chaque position géographique
+        boatsByGeoPosition.forEach((data, geoKey) => {
+            const boatList = data.boats;
+
+            // Compter les bateaux par direction
+            const countByDirection = boatList.reduce((acc, boat) => {
+                const direction = boat.sens || 'Inconnu';
+                acc[direction] = (acc[direction] || 0) + 1;
+                return acc;
+            }, {});
+
+            // Créer le marqueur avec les totaux montant et descendant
+            const marker = L.marker([data.lat, data.lng], {
+                icon: this.createBoatIcon(countByDirection['Montant'] || 0, countByDirection['Descendant'] || 0),
+                title: `${boatList.length} bateau(x)`
             });
-        } catch (error) {
-            console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
-        }
+
+            // Ajouter un callback pour le clic
+            marker.on('click', () => {
+                if (onBoatClick) {
+                    onBoatClick(boatList);
+                }
+            });
+
+            marker.addTo(this.markersLayer);
+            this.currentMarkers.push(marker);
+        });
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
     }
+}
 
     /**
      * Crée une icône personnalisée pour les bateaux

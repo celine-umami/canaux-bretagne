@@ -101,8 +101,15 @@ Configuration centralisée de l'application:
 #### `data.js`
 Fonctions d'accès aux données externes:
 - `fetchChannel()` - Récupère la liste des canaux (groupés par voie_navigable)
-- `fetchLocksForChannel(channelId)` - Récupère les écluses d'un canal depuis l'API
-- `fetchBoatsForChannel(channelId)` - Récupère les bateaux présents sur un canal
+  - **Division intelligente**: Le canal "Canal de Nantes à Brest" (219 écluses) est automatiquement divisé en 3 sections pour optimiser les requêtes API
+  - Chaque section dispose d'un identifiant unique (`Canal de Nantes à Brest_section_1`, etc.)
+- `fetchLocksForChannel(channel)` - Récupère les écluses d'un canal/section depuis l'API
+  - Accepte les noms simples ou les objets canal avec plages `minEcluse/maxEcluse`
+  - Gère la pagination automatique (3 requêtes parallèles pour les grands canaux)
+- `fetchBoatsForChannel(channel)` - Récupère les bateaux présents sur un canal
+  - **Filtrage par date** au niveau API: récupère uniquement les bateaux des 48 dernières heures
+  - Utilise le champ `idtech` (timestamp) pour filtrer hier + aujourd'hui
+  - Élimine les bateaux dupliqués (garde le plus récent par nom)
 - Gestion des erreurs et des timeouts
 
 #### `main.js` - Classe `Application`
@@ -117,26 +124,33 @@ Gestion complète de la carte Leaflet:
 - **initMap()**: Crée la carte, ajoute les couches (tuiles, tracé, marqueurs)
 - **loadChannel()**: Charge et affiche un canal (tracé, écluses, bateaux)
 - **drawChannelPath()**: Dessine le tracé du canal (polyline)
-- **addLocks()**: Ajoute les marqueurs des écluses avec popups
-- **addBoats()**: Place les bateaux sur la carte avec groupage par bief
-- **deduplicateBoats()**: Garde la position la plus récente par bateau
-- **createLockIcon() / createBoatIcon()**: Crée les custom icons Leaflet
+- **addLocks()**: Ajoute les marqueurs des écluses 
+  - Icônes minimales (4x4px) pour un affichage discret
+  - **Opacité variable selon zoom**: 0 (zoom < 10) → 0.6 (zoom 10-11) → 0.8 (zoom 12) → 1 (zoom 13+)
+  - Améliore la lisibilité lors du dézoom
+- **addBoats()**: Place les bateaux sur la carte avec groupage intelligent
+  - **Groupage par position géographique** (lat, lng) pour consolider les bateaux convergents
+  - Bateaux positionnés à leur écluse correspondante (`point_geo_bief`)
+  - Respecte la direction (Montant/Descendant) pour chaque bateau
+  - Les bateaux de directions opposées au même endroit partagent un marqueur
+- **createLockIcon()**: Icône minimale pour les écluses
+- **createBoatIcon()**: Icône personnalisée avec compteurs directionnels
+  - Badge "M" pour les bateaux Montant
+  - Badge "D" pour les bateaux Descendant
+  - Affichage combiné des deux directions quand applicable
+- **deduplicateBoats()**: Garde la position la plus récente par bateau (par nom)
+- **setupLockMarkersZoomListener()**: Gère l'opacité dynamique des marqueurs selon le niveau de zoom
 
 #### `ui.js` - Classe `UIManager`
 Gestion complète de l'interface utilisateur:
 - **initChannelSelect()**: Configure le dropdown des canaux
-- **showBoatsModal()**: Affiche la modal avec détails des bateaux d'un bief
+  - Affiche les sections du "Canal de Nantes à Brest" avec leurs plages d'écluses
+- **showBoatsModal()**: Affiche la modal avec détails des bateaux d'un groupe
+  - **Tri décroissant**: Bateaux affichés du plus récent au plus ancien (par timestamp `idtech`)
 - **closeModal()**: Ferme la modal (gère aussi Escape, clic background)
 - **showLoading() / hideLoading()**: Affiche/cache l'indicateur de chargement
 - **showError()**: Affiche un message d'erreur à l'utilisateur
 - **handleOrientationChange()**: Adaptation du layout au changement d'orientation
-
-#### `ui.js` (`UIManager`)
-Gère l'interface utilisateur:
-- Initialisation du dropdown
-- Affichage/fermeture de la modal
-- Messages d'erreur
-- Gestion des événements DOM
 ## ✨ Fonctionnalités
 
 ### En temps réel
@@ -147,8 +161,10 @@ Gère l'interface utilisateur:
 
 ### Gestion des bateaux
 - 🚢 Déduplication automatique des bateaux (garde le plus récent par nom)
-- 🎯 Groupage des bateaux par bief (section de canal)
-- 📝 Modal détaillée avec informations complètes
+- 🎯 **Groupage par position géographique** (lat, lng) - consolide les bateaux qui convergent au même endroit
+- 🧭 **Compteurs directionnels**: Affiche les bateaux Montant (M) et Descendant (D) séparément
+- ⏰ **Filtrage temporel**: Récupère uniquement les bateaux des 48 dernières heures (hier + aujourd'hui)
+- 📝 Modal détaillée avec informations complètes, **triées par heure décroissante** (plus récent en premier)
 - 🖱️ Interaction au clic pour explorer les bateaux
 
 ### Interface utilisateur
@@ -203,8 +219,11 @@ Modal affichée avec détails
 {
   "results": [
     {
+      "id": "Canal de Nantes à Brest_section_1",
+      "displayName": "Canal de Nantes à Brest écluse n°1 à 73",
       "voie_navigable": "Canal de Nantes à Brest",
-      // autres champs regroupés
+      "minEcluse": 1,
+      "maxEcluse": 73
     }
   ]
 }
@@ -218,8 +237,12 @@ Modal affichée avec détails
       "nom": "Écluse de Violettes",
       "nom_formulaire": "Écluse des Violettes",
       "num_ecluse": "1",
-      "geo_point": "47.8456, -3.3621",
-      "sens": "Amont"
+      "sens": "Montant",
+      "point_geo_bief": {
+        "lat": 47.8456,
+        "lon": -3.3621
+      },
+      "geo_point": "47.8456, -3.3621"
     }
   ]
 }
@@ -232,12 +255,19 @@ Modal affichée avec détails
     {
       "nom_bateau": "Mon Bateau",
       "voie_navigable": "Canal Nantes-Brest",
-      "idtech": "2026-03-13T10:56:06.683+01:00",
-      "geo_point": "47.8456, -3.3621"
+      "num_ecluse": "5",
+      "sens": "Montant",
+      "idtech": "2026-04-21T10:56:06.683+01:00"
     }
   ]
 }
 ```
+
+**Notes importantes:**
+- Les champs `point_geo_bief` (objet avec lat/lon) ou `geo_point` (string) contiennent les coordonnées précises
+- Le champ `idtech` (timestamp ISO 8601) est utilisé pour le tri descendant et le filtrage temporel
+- `sens` peut être "Montant" ou "Descendant"
+- `num_ecluse` identifie l'écluse de référence du bateau
 
 ## 🔌 Intégration API
 
@@ -276,21 +306,27 @@ createBoatIcon() {
 }
 ```
 
-## 🚀 Déploiement & Performance
+## 🚀 Optimisations & Performance
 
-- ✅ Zero-dépendance (CDN Leaflet seulement)
-- ✅ Modules ES6 statiques (pas de build)
-- ✅ Logs debug dans console (window.app, window.mapManager)
-- ✅ Gestion erreurs API avec messages utilisateur
+### Optimisations implémentées
+- ✅ **Division des grands canaux**: "Canal de Nantes à Brest" (219 écluses) divisé en 3 sections pour réduire la charge API
+- ✅ **Filtrage API côté serveur**: Date filtering au niveau de l'API (hier + aujourd'hui) plutôt que client
+- ✅ **Groupage géographique**: Bateaux consolidés par position (lat, lng) pour réduire les marqueurs affichés
+- ✅ **Opacité variable des écluses**: Améliore les performances visuelles lors du zoom
+- ✅ **Zero-dépendance** (CDN Leaflet seulement)
+- ✅ **Modules ES6 statiques** (pas de build)
+- ✅ **Gestion erreurs API** avec messages utilisateur
 
 ## 🚀 Évolutions futures possibles
 
-- Ajouter 2 pages supplémentaires (navigation principale)
+- 📌 **Page de navigation** (déjà planifiée): Liste des canaux avec comptage en temps réel des bateaux
+- 🔄 Fonction NavigationManager pour le pré-traitement des chaînes de navigation
+- 🔙 Bouton "Retour" pour naviguer entre page de sélection et carte
 - Filtrer les bateaux par type
 - Historiques des trajets
 - Notifications en temps réel
 - WebSockets pour le suivi en direct
-- Données réelles depuis des APIs tierces
+- Données réelles depuis des APIs tierces supplémentaires
 
 ## 📝 Notes
 
@@ -298,6 +334,22 @@ createBoatIcon() {
 - Pas de framework front-end (vanilla JS)
 - Données mock facilement remplaçables
 - Architecture modulaire pour éviter les dépendances circulaires
+
+## 📋 Évolutions récentes (Avril 2026)
+
+### v1.2 - Optimisation du groupage et du filtrage
+- ✨ **Groupage géographique des bateaux**: Changement du modèle de groupage de (num_ecluse|sens) vers (lat, lng)
+  - Bateaux de directions opposées au même endroit partagent maintenant un marqueur
+  - Améliore la clarté visuelle sur la carte
+- 🎯 **Compteurs directionnels**: Les icônes de bateaux affichent "M" (Montant) et "D" (Descendant) séparément
+- ⏰ **Filtrage temporel API**: Les bateaux sont filtrés au niveau API (hier + aujourd'hui)
+- 📊 **Tri des détails**: Les bateaux dans la modal sont triés du plus récent au plus ancien
+- 🏗️ **Optimisation des grands canaux**: Division du "Canal de Nantes à Brest" en 3 sections
+
+### v1.1 - Amélioration visuelle et UX
+- 🔍 Marqueurs d'écluse minimisés (4x4px) pour moins distraire de la vue principale
+- 📈 Opacité dynamique des écluses selon le niveau de zoom
+- 🎨 Meilleure hiérarchie visuelle entre bateaux et infrastructure
 
 ## 🐛 Debug
 
