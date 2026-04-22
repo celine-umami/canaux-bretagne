@@ -25,7 +25,7 @@
             </div>
         </header>
 
-        <div class="home-page">
+        <div class="home-page hidden">
             <h1>Cartographie des canaux</h1>
 
             <div>
@@ -65,7 +65,7 @@
 
         </div>
 
-        <div class="map-page hidden">
+        <div class="map-page">
             <!-- Section du dropdown -->
             <div class="controls-section">
                 <div class="controls-content">
@@ -76,7 +76,9 @@
             </div>
 
             <!-- Conteneur de la carte -->
-            <main class="map-container" id="map"></main>
+            <div class="map-container">
+                <main class="maps" id="map"></main>
+            </div>
 
             <!-- Modal détails bateaux -->
             <div id="boats-modal" class="modal hidden">

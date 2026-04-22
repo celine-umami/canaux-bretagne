@@ -48,7 +48,7 @@ body {
 
 /* gestionaire de pages */
 .map-page {
-    height: auto;
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
@@ -63,7 +63,7 @@ body {
 }
 
 .home-page .contenaire-card {
-    overflow-y: scroll;
+    overflow-y: auto;
     min-height: 0;
     height: 100%;
     padding: 15px 0 110px 0;
@@ -287,6 +287,10 @@ h1 {
     height: 100%;
     overflow: hidden;
     /* padding-bottom: 120px; */
+}
+
+.maps {
+    height: 100%;
 }
 
 /* Modal styles */
