@@ -17,7 +17,8 @@ body {
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     width: 100%;
 }
 
@@ -43,6 +44,44 @@ body {
     width: auto;
     object-fit: contain;
     object-position: center;
+}
+
+/* gestionaire de pages */
+.map-page {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.home-page {
+    padding: 16px 12px 0px 12px;
+    flex-grow: 1;
+    flex-basis: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.home-page .contenaire-card {
+    overflow-y: scroll;
+    min-height: 0;
+    height: 100%;
+    padding: 0 0 110px 0;
+}
+
+.hidden {
+    display: none;
+}
+
+/* commun a toute les pages */
+
+h1 {
+    color: #000;
+    text-align: center;
+    font-family: "Region Bretagne New";
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 140%;
 }
 
 /* Controls Section - Dropdown */
@@ -120,8 +159,9 @@ body {
     flex: 1;
     width: 100%;
     min-height: 0;
+    height: 100%;
     overflow: hidden;
-    padding-bottom: 120px;
+    /* padding-bottom: 120px; */
 }
 
 /* Modal styles */
@@ -134,7 +174,7 @@ body {
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: flex-end;
-    z-index: 1000;
+    z-index: 1010;
     animation: slideIn 0.3s ease;
 }
 
@@ -400,6 +440,14 @@ body {
         max-width: 400px;
     }
 }
+
+
+/* ------------------------ home pages ---------------------------------- */
+
+
+
+
+/* ------------------------ END home pages ---------------------------------- */
 
 /* Footer sticky */
 .app-footer {
