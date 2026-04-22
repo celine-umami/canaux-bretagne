@@ -12,7 +12,8 @@ class UIManager {
             boatsModal: document.getElementById('boats-modal'),
             boatsList: document.getElementById('boats-list'),
             modalClose: document.querySelector('.modal-close'),
-            mapContainer: document.getElementById('map')
+            mapContainer: document.getElementById('map'),
+            appFooter: document.querySelector('.app-footer')
         };
 
         this.setupEventListeners();
@@ -123,6 +124,7 @@ class UIManager {
         }
 
         this.elements.boatsModal.classList.remove('hidden');
+        this.elements.appFooter?.classList.add('hidden');
 
         // Scroll vers le haut de la modal
         setTimeout(() => {
@@ -135,6 +137,7 @@ class UIManager {
      */
     closeModal() {
         this.elements.boatsModal.classList.add('hidden');
+        this.elements.appFooter?.classList.remove('hidden');
     }
 
     /**
