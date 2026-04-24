@@ -7,6 +7,8 @@ import { fetchChannel, fetchBoatsForChannel, fetchLocksForChannel } from './data
 import { logConfig } from './config.js';
 import MapManager from './map.js';
 import UIManager from './ui.js';
+import NavigationManager from "./navigation.js";
+import { HomePageManager } from "./home.js";
 
 /**
  * Formate une date au format "XX mois XXXX"
@@ -26,8 +28,18 @@ function formatDateToFrench(date) {
 
 class Application {
     constructor() {
+        /** @type {MapManager} */
         this.mapManager = new MapManager('map');
+
+        /** @type {UIManager} */
         this.uiManager = new UIManager();
+
+        /** @type {NavigationManager} */
+        this.navigationManager = new NavigationManager();
+
+        /** @type {HomePageManager} */
+        this.homePageManager = new HomePageManager();
+
         this.channels = [];
         this.currentChannel = null;
         this.boats = [];
@@ -48,12 +60,13 @@ class Application {
      */
     async init() {
         try {
-
             // Initialiser le footer
             this.initFooter();
 
             // Récupérer la liste des canaux (dynamique ou mock)
             this.channels = await fetchChannel();
+
+            this.homePageManager.renderChannelList(this.channels.results);
 
 
             if (!this.channels.results || this.channels.results.length === 0) {
@@ -67,6 +80,9 @@ class Application {
 
             // Charger le canal par défaut (le premier de la liste)
             await this.loadChannel(this.channels.results[0]);
+
+            this.navigationManager.navigate("home");
+
         } catch (error) {
             this.uiManager.showError('Erreur lors de l\'initialisation de l\'application');
             console.error(error);
@@ -100,7 +116,7 @@ class Application {
         const btnHome = document.querySelector('.footer-home');
         if (btnHome) {
             btnHome.addEventListener('click', () => {
-                console.log('Bouton Accueil cliqué');
+                this.navigationManager.navigate("home");
                 // À implémenter: navigation vers page d'accueil
             });
         }
@@ -231,4 +247,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = app;
     window.mapManager = app.mapManager;
     window.uiManager = app.uiManager;
+    window.navigationManager = app.navigationManager;
 });

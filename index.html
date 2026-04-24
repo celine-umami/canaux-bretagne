@@ -25,12 +25,13 @@
             </div>
         </header>
 
-        <div class="home-page hidden">
+        <div class="home-page hidden" id="home-page">
             <h1>Cartographie des canaux</h1>
 
             <div>
-                <div class="contenaire-card">
-                    <div class="canal-card" style="background-color: #AFCB56;">
+                <div id="channel-list-container" class="contenaire-card">
+                    <p>Chargement...</p>
+                    <!-- <div class="canal-card" style="background-color: #AFCB56;">
                         <p class="canal-card__title">Blavet</p>
                         <div class="canal-card__footer">
                             <div class="canal-card__status">
@@ -59,13 +60,13 @@
                             </div>
                             <button class="canal-card__button">Accéder</button>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 
         </div>
 
-        <div class="map-page">
+        <div class="map-page" id="map-page">
             <!-- Section du dropdown -->
             <div class="controls-section">
                 <div class="controls-content">
@@ -92,7 +93,8 @@
 
         <!-- Footer sticky -->
         <footer class="app-footer">
-            <button class="footer-home active" aria-label="Accueil" type="button">
+            <!-- active -->
+            <button id="bnt-home-footer" class="footer-home" aria-label="Accueil" type="button">
                 <img src="./assets/images/icons/home_icon.svg" alt="" class="footer-icon">
                 <span class="footer-text">Accueil</span>
             </button>

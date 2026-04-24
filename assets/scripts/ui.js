@@ -62,7 +62,7 @@ class UIManager {
             const displayText = channel.displayName || channel.voie_navigable;
             // Utiliser id comme value si disponible, sinon voie_navigable
             const value = channel.id || channel.voie_navigable;
-            
+
             option.value = value;
             option.textContent = displayText;
             this.elements.channelSelect.appendChild(option);
@@ -115,7 +115,7 @@ class UIManager {
         } else {
             // Trier les bateaux par heure décroissante (plus récents d'abord)
             const sortedBoats = sortBoatsByTimeDescending(boats);
-            
+
             sortedBoats.forEach(boat => {
                 const boatEl = createBoatDetailsCard(boat);
                 this.elements.boatsList.appendChild(boatEl);
@@ -174,6 +174,14 @@ class UIManager {
                 mapInstance.resize();
             }
         }, 100);
+    }
+
+    /**
+     * Change le canal sélectionné dans le dropdown
+     * @param {string} channelId 
+     */
+    handleChangeCannel(channelId) {
+        this.elements.channelSelect.value = channelId;
     }
 
     /**

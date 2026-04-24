@@ -58,7 +58,7 @@ body {
     flex-grow: 1;
     flex-basis: 0;
     flex-shrink: 1;
-    overflow: hidden;
+    overflow: auto;
     min-height: 0;
 }
 
@@ -611,10 +611,12 @@ h1 {
     width: 18px;
     height: 18px;
     object-fit: cover;
+    transition: filter 0.4s ease;
 }
 
 .footer-home.active .footer-icon {
     filter: brightness(0) saturate(100%) invert(51%) sepia(5%) saturate(3243%) hue-rotate(289deg) brightness(83%) contrast(81%);
+    transition: filter 0.4s ease;
 }
 
 .footer-text {
