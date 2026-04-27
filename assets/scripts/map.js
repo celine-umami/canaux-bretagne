@@ -144,7 +144,7 @@ class MapManager {
         return deduped;
     }
 
-        /**
+    /**
      * Ajoute les marqueurs des bateaux
      * @param {Array} boats - Tableau des bateaux
      * @param {Array} locks - Tableau des écluses
@@ -152,82 +152,82 @@ class MapManager {
      */
     addBoats(boats, locks, onBoatClick) {
 
-    if (!boats || boats.length === 0 || !locks || locks.length === 0) {
-        console.warn("⚠️ Pas de bateaux ou d'écluses");
-        return;
-    }
+        if (!boats || boats.length === 0 || !locks || locks.length === 0) {
+            console.warn("⚠️ Pas de bateaux ou d'écluses");
+            return;
+        }
 
-    try {
-        // Dédupliquer les bateaux (garder le plus récent par nom)
-        const deduplicatedBoats = this.deduplicateBoats(boats);
+        try {
+            // Dédupliquer les bateaux (garder le plus récent par nom)
+            const deduplicatedBoats = this.deduplicateBoats(boats);
 
-        // Grouper les bateaux par position géographique (lat, lng)
-        // Les bateaux Montant/Descendant au même endroit seront ensemble
-        const boatsByGeoPosition = new Map();
+            // Grouper les bateaux par position géographique (lat, lng)
+            // Les bateaux Montant/Descendant au même endroit seront ensemble
+            const boatsByGeoPosition = new Map();
 
-        deduplicatedBoats.forEach(boat => {
-            const numEcluse = boat.num_ecluse;
-            const sens = boat.sens;
+            deduplicatedBoats.forEach(boat => {
+                const numEcluse = boat.num_ecluse;
+                const sens = boat.sens;
 
-            if (numEcluse === null || numEcluse === undefined || !sens) {
-                console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse ou sens`);
-                return;
-            }
-
-            // Trouver l'écluse qui correspond EXACTEMENT à ce bateau (num_ecluse + sens)
-            const lock = locks.find(l => l.num_ecluse === numEcluse && l.sens === sens);
-
-            if (!lock || !lock.point_geo_bief) {
-                console.warn(`⚠️ Écluse non trouvée ou point_geo_bief manquant pour #${numEcluse} (${sens})`);
-                return;
-            }
-
-            // Clé de position: utiliser les coordonnées géographiques
-            // Cela regroupe les bateaux à la même position physique
-            const geoKey = `${lock.point_geo_bief.lat},${lock.point_geo_bief.lon}`;
-
-            if (!boatsByGeoPosition.has(geoKey)) {
-                boatsByGeoPosition.set(geoKey, {
-                    boats: [],
-                    lat: lock.point_geo_bief.lat,
-                    lng: lock.point_geo_bief.lon
-                });
-            }
-
-            boatsByGeoPosition.get(geoKey).boats.push(boat);
-        });
-
-        // Créer les marqueurs pour chaque position géographique
-        boatsByGeoPosition.forEach((data, geoKey) => {
-            const boatList = data.boats;
-
-            // Compter les bateaux par direction
-            const countByDirection = boatList.reduce((acc, boat) => {
-                const direction = boat.sens || 'Inconnu';
-                acc[direction] = (acc[direction] || 0) + 1;
-                return acc;
-            }, {});
-
-            // Créer le marqueur avec les totaux montant et descendant
-            const marker = L.marker([data.lat, data.lng], {
-                icon: this.createBoatIcon(countByDirection['Montant'] || 0, countByDirection['Descendant'] || 0),
-                title: `${boatList.length} bateau(x)`
-            });
-
-            // Ajouter un callback pour le clic
-            marker.on('click', () => {
-                if (onBoatClick) {
-                    onBoatClick(boatList);
+                if (numEcluse === null || numEcluse === undefined || !sens) {
+                    console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse ou sens`);
+                    return;
                 }
+
+                // Trouver l'écluse qui correspond EXACTEMENT à ce bateau (num_ecluse + sens)
+                const lock = locks.find(l => l.num_ecluse === numEcluse && l.sens === sens);
+
+                if (!lock || !lock.point_geo_bief) {
+                    console.warn(`⚠️ Écluse non trouvée ou point_geo_bief manquant pour #${numEcluse} (${sens})`);
+                    return;
+                }
+
+                // Clé de position: utiliser les coordonnées géographiques
+                // Cela regroupe les bateaux à la même position physique
+                const geoKey = `${lock.point_geo_bief.lat},${lock.point_geo_bief.lon}`;
+
+                if (!boatsByGeoPosition.has(geoKey)) {
+                    boatsByGeoPosition.set(geoKey, {
+                        boats: [],
+                        lat: lock.point_geo_bief.lat,
+                        lng: lock.point_geo_bief.lon
+                    });
+                }
+
+                boatsByGeoPosition.get(geoKey).boats.push(boat);
             });
 
-            marker.addTo(this.markersLayer);
-            this.currentMarkers.push(marker);
-        });
-    } catch (error) {
-        console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
+            // Créer les marqueurs pour chaque position géographique
+            boatsByGeoPosition.forEach((data, geoKey) => {
+                const boatList = data.boats;
+
+                // Compter les bateaux par direction
+                const countByDirection = boatList.reduce((acc, boat) => {
+                    const direction = boat.sens || 'Inconnu';
+                    acc[direction] = (acc[direction] || 0) + 1;
+                    return acc;
+                }, {});
+
+                // Créer le marqueur avec les totaux montant et descendant
+                const marker = L.marker([data.lat, data.lng], {
+                    icon: this.createBoatIcon(countByDirection['Montant'] || 0, countByDirection['Descendant'] || 0),
+                    title: `${boatList.length} bateau(x)`
+                });
+
+                // Ajouter un callback pour le clic
+                marker.on('click', () => {
+                    if (onBoatClick) {
+                        onBoatClick(boatList);
+                    }
+                });
+
+                marker.addTo(this.markersLayer);
+                this.currentMarkers.push(marker);
+            });
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
+        }
     }
-}
 
     /**
      * Crée une icône personnalisée pour les bateaux
@@ -282,7 +282,7 @@ class MapManager {
     setupLockMarkersZoomListener() {
         const updateLockMarkersOpacity = () => {
             const currentZoom = this.map.getZoom();
-            
+
             // Opacité basée sur le zoom: moins visible au dézoom
             // A zoom 8: opacité = 0 (invisible)
             // A zoom 10: opacité = 0.3
@@ -296,7 +296,7 @@ class MapManager {
             } else if (currentZoom >= 10) {
                 opacity = 0.6;
             }
-            
+
             this.lockMarkers.forEach(marker => {
                 const element = marker.getElement();
                 if (element) {
@@ -360,7 +360,7 @@ class MapManager {
         this.currentMarkers = [];
         this.lockMarkers = [];
         this.boatsClickHandlers.clear();
-        
+
         // Retirer les listeners de zoom
         if (this.map) {
             this.map.off('zoomend');
