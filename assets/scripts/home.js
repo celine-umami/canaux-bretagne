@@ -13,16 +13,28 @@ import { escapeHtml } from "./utils/htmlUtils.js";
 export class HomePageManager {
   /** @type {Element | null} */
   channelListContainer;
+  bntBack;
 
   constructor() {
     this.channelListContainer = document.querySelector("#channel-list-container");
+
+    // initalise le bouton de retour en arrière pour les sous section
+    this.bntBack = document.querySelector("#home-page-bnt-back");
+
+    this.bntBack.addEventListener("click", () => {
+      this.bntBack.style.display = "none";
+      this.renderChannelList(window.app.channels.results);
+    })
   }
 
   /**
    * 
    * @param {ChannelsType[]} channels 
+   * @param {boolean} isSubSection - pour que ca traite les sous section ou pas
    */
-  renderChannelList(channels) {
+  renderChannelList(channels, isSubSection = false) {
+    this.setTitle("Cartographie des canaux");
+
     // écrase un potentiel ancien contenu (ex: "Chargement...")
     this.channelListContainer.innerHTML = '';
 
@@ -32,20 +44,30 @@ export class HomePageManager {
     // partour tout les canaux pour les rendre sauf si la voir navigable a déjé été rendu
     channels.sort((a, b) => a.voie_navigable - b.voie_navigable).forEach(channel => {
       // si il a déjé été rendu on ne le rend pas a nouveux
-      if (voieNavigableChannelRendered.includes(channel.voie_navigable)) {
+      if (voieNavigableChannelRendered.includes(channel.voie_navigable) && !isSubSection) {
         return;
       }
 
-      const channelCard = this.channelCardHTML(channel);
+      const channelCard = this.channelCardHTML(channel, isSubSection);
 
       // ajoute le listener pour allez sur la map
       // crée temporairment le lisener pour allez sur la map
       const bntGoMap = channelCard.querySelector(".canal-card__button");
 
       bntGoMap.addEventListener("click", (e) => {
-        window.uiManager.handleChangeCannel(channel.voie_navigable);
-        window.app.handleChannelChange(channel.voie_navigable);
-        window.navigationManager.navigate("map");
+        // si il a pas de sous section ou que c'est déja une sous section on va directement sur la map
+        if (channel.id_section === undefined || isSubSection) {
+          window.uiManager.handleChangeCannel(isSubSection ? channel.id : channel.voie_navigable);
+          window.app.handleChannelChange(isSubSection ? channel.id : channel.voie_navigable);
+          window.navigationManager.navigate("map");
+          return;
+        }
+        // sion on change les canaux de la map pour afficher les sous section
+        // en appelant récursivement la fonction de rendu de la liste
+        this.renderChannelList(channels.filter(c => c.voie_navigable === channel.voie_navigable), true);
+        this.setTitle(channel.voie_navigable);
+        // affiche le bouton de retour en arrière
+        this.bntBack.style.display = "flex";
       })
 
       this.channelListContainer.appendChild(channelCard);
@@ -55,15 +77,18 @@ export class HomePageManager {
 
   /**
    * @param {ChannelsType} channel
+   * @param {boolean} isSubSection - pour que ca traite les sous section ou pas
    * @returns {HTMLDivElement}
    */
-  channelCardHTML(channel) {
+  channelCardHTML(channel, isSubSection = false) {
     const cardHTML = document.createElement("div");
     cardHTML.classList.add("canal-card");
     cardHTML.style.backgroundColor = this.getColorCardChannel(channel.voie_navigable);
 
+    const title = isSubSection ? this.generateNameSoubSection(channel) : channel.voie_navigable;
+
     cardHTML.innerHTML = `
-            <p class="canal-card__title">${escapeHtml(channel.voie_navigable)}</p>
+            <p class="canal-card__title">${escapeHtml(title)}</p>
             <div class="canal-card__footer">
                 <div class="canal-card__status">
 
@@ -89,7 +114,6 @@ export class HomePageManager {
         `;
 
     return cardHTML;
-
 
     // return `
     // <div class="canal-card" style="background-color: #AFCB56;">
@@ -142,5 +166,26 @@ export class HomePageManager {
       default:
         return "#AFCB56";
     }
+  }
+
+  /**
+   * Génère le titre de la card pour une sous section
+   * @param {ChannelsType} channel
+   */
+  generateNameSoubSection(channel) {
+    return `${channel.voie_navigable} entre n°${channel.minEcluse} et n°${channel.maxEcluse}`;
+  }
+
+  /**
+   * Change le titre de la page d'acceuil
+   * @param {string} title - le titre a mettre sur la page d'acceuil
+   * @returns rien
+   */
+  setTitle(title) {
+    const titleElement = document.querySelector("#home-page-title");
+
+    if (!titleElement) return;
+
+    titleElement.textContent = title;
   }
 }

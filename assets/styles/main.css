@@ -81,6 +81,32 @@ body {
 }
 
 /* commun a toute les pages */
+.contenaire-titre {
+    position: relative;
+}
+
+.bnt-back {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    background-color: #1E1E1E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: none;
+}
+
+.bnt-back img {
+    transform: rotate(180deg);
+    width: 13px;
+    height: 13px;
+    object-fit: cover;
+    object-position: center;
+}
 
 h1 {
     color: #000;
