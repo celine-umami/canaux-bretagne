@@ -109,7 +109,7 @@ class UIManager {
     showBoatsModal(boats) {
         this.elements.boatsList.innerHTML = '';
 
-        if (boats.length === 0) {
+        if (boats && boats.length === 0) {
             this.elements.boatsList.innerHTML =
                 '<p style="text-align: center; color: #999;">Pas de bateaux à cet endroit</p>';
         } else {

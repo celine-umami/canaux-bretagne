@@ -10,6 +10,8 @@ import UIManager from './ui.js';
 import NavigationManager from "./navigation.js";
 import { HomePageManager } from "./home.js";
 
+/** @typedef {import('./types/Boat').Boat} Boat */
+
 /**
  * Formate une date au format "XX mois XXXX"
  * @param {Date} date - La date à formater
@@ -44,6 +46,11 @@ class Application {
         this.currentChannel = null;
         this.boats = [];
         this.locks = [];
+
+        /**
+         * @type {Object.<string, Boat[]>} allBoats - un objet avec une clé par cannal et tout les bateaux d'un canal
+         */
+        this.allBoats = {};
     }
 
     /**
@@ -65,6 +72,22 @@ class Application {
 
             // Récupérer la liste des canaux (dynamique ou mock)
             this.channels = await fetchChannel();
+
+            // liste pour controler que les canaux ne sont pas doublés
+            const uniqueCanals = new Set();
+
+            // Récupére tout les bateaux pour les stocker et les utiliser plus tard
+            await Promise.all(
+                this.channels.results
+                    .filter(ch => {
+                        if (uniqueCanals.has(ch.voie_navigable)) return false;
+                        uniqueCanals.add(ch.voie_navigable);
+                        return true;
+                    })
+                    .map(async (ch) => {
+                        this.allBoats[ch.voie_navigable] = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch)).results || []);
+                    })
+            );
 
             this.homePageManager.renderChannelList(this.channels.results);
 

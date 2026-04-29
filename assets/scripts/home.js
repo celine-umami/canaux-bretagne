@@ -1,14 +1,8 @@
 import { escapeHtml } from "./utils/htmlUtils.js";
 
-/**
- * @typedef {Object} ChannelsType
- * @property {string} id
- * @property {string} voie_navigable
- * @property {string} [displayName]
- * @property {number} [id_section]
- * @property {number} [maxEcluse]
- * @property {number} [minEcluse]
- */
+/** @typedef {import('./types/Boat').Boat} Boat */
+/** @typedef {import('./types/Channel').Channel} ChannelsType */
+
 
 export class HomePageManager {
   /** @type {Element | null} */
@@ -87,24 +81,40 @@ export class HomePageManager {
 
     const title = isSubSection ? this.generateNameSoubSection(channel) : channel.voie_navigable;
 
+    /** @type {Boat[]} */
+    const listBoatsForChannel = window.app.allBoats[channel.voie_navigable] || [];
+
+    const boatsForThisSection = listBoatsForChannel
+
+    const { montant, descendant } = boatsForThisSection.reduce((acc, boat) => {
+      if (boat.sens === "Montant") {
+        acc.montant += 1;
+      } else if (boat.sens === "Descendant") {
+        acc.descendant += 1;
+      }
+      return acc;
+    }, { montant: 0, descendant: 0 });
+
     cardHTML.innerHTML = `
             <p class="canal-card__title">${escapeHtml(title)}</p>
             <div class="canal-card__footer">
                 <div class="canal-card__status">
 
-                ${true ? `<p class="canal-card__status-text">Aucun bateau</p>` : `
-                  <div class="canal-card__metric">
-                    <div class="canal-card__metric-badge">
-                      <p class="canal-card__metric-badge-text" style="background-color: #AFCB56;">D</p>
-                    </div>
-                    <p class="canal-card__metric-text">10 bateux</p>
-                  </div>
-                  <div class="canal-card__metric">
-                    <div class="canal-card__metric-badge ">
-                      <p class="canal-card__metric-badge-text" style="background-color: #F1B453;">M</p>
-                    </div>
-                    <p class="canal-card__metric-text">3 bateaux</p>
-                  </div>
+                ${(descendant === 0 && montant === 0) ? `<p class="canal-card__status-text">Aucun bateau</p>` : `
+                  ${descendant > 0 ? `
+                    <div class="canal-card__metric">
+                      <div class="canal-card__metric-badge">
+                        <p class="canal-card__metric-badge-text" style="background-color: #AFCB56;">D</p>
+                      </div>
+                      <p class="canal-card__metric-text">${descendant} bateux</p>
+                    </div>` : ""}
+                  ${montant > 0 ? `
+                    <div class="canal-card__metric">
+                      <div class="canal-card__metric-badge ">
+                        <p class="canal-card__metric-badge-text" style="background-color: #F1B453;">M</p>
+                      </div>
+                      <p class="canal-card__metric-text">${montant} bateaux</p>
+                    </div>` : ""}
                   `}
 
 
@@ -188,4 +198,6 @@ export class HomePageManager {
 
     titleElement.textContent = title;
   }
+
+  getBoatsForSectionChannel() { }
 }
