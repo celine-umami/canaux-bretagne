@@ -72,18 +72,23 @@ class Application {
 
             // Récupérer la liste des canaux (dynamique ou mock)
             this.channels = await fetchChannel();
-
             // Récupére tout les bateaux pour les stocker et les utiliser plus tard
             await Promise.all(
                 this.channels.results
                     .map(async (ch) => {
                         const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch)).results || []);
 
+                        // Filtrer les bateaux pour correspondre à la plage d'écluses du sous-canal
+                        const filteredBoats = boatsForChannel.filter(boat => {
+                            if (!ch.minEcluse && !ch.maxEcluse) return true; // Si pas de plage d'écluses, on prend tous les bateaux
+                            return (boat.num_ecluse >= ch.minEcluse && boat.num_ecluse <= ch.maxEcluse)
+                        });
+
                         if (!this.allBoats[ch.voie_navigable]) {
                             this.allBoats[ch.voie_navigable] = {};
                         }
 
-                        this.allBoats[ch.voie_navigable][ch.id] = boatsForChannel;
+                        this.allBoats[ch.voie_navigable][ch.id] = filteredBoats;
                     })
             );
 
