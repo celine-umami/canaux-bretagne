@@ -81,10 +81,10 @@ export class HomePageManager {
 
     const title = isSubSection ? this.generateNameSoubSection(channel) : channel.voie_navigable;
 
-    /** @type {Boat[]} */
+    /** @type {Object.<string, Boat[]>} */
     const listBoatsForChannel = window.app.allBoats[channel.voie_navigable] || [];
 
-    const boatsForThisSection = listBoatsForChannel
+    const boatsForThisSection = isSubSection ? listBoatsForChannel[channel.id] || [] : Object.values(listBoatsForChannel).flat() || [];
 
     const { montant, descendant } = boatsForThisSection.reduce((acc, boat) => {
       if (boat.sens === "Montant") {
