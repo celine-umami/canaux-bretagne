@@ -260,7 +260,7 @@ class Application {
         }
 
         // Afficher la modal avec tous les bateaux du bief
-        this.uiManager.showBoatsModal(boats);
+        this.navigationManager.openModal(boats);
     }
 }
 

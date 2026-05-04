@@ -1,5 +1,3 @@
-import { createBoatDetailsCard } from "./ui/boatsCardDetails.js";
-import { sortBoatsByTimeDescending } from "./utils/dateTimeutils.js";
 /**
  * Module de gestion de l'interface utilisateur
  * Gère les interactions DOM, le dropdown et la modal
@@ -9,9 +7,6 @@ class UIManager {
     constructor() {
         this.elements = {
             channelSelect: document.getElementById('channel-select'),
-            boatsModal: document.getElementById('boats-modal'),
-            boatsList: document.getElementById('boats-list'),
-            modalClose: document.querySelector('.modal-close'),
             mapContainer: document.getElementById('map')
         };
 
@@ -22,23 +17,6 @@ class UIManager {
      * Configure les event listeners
      */
     setupEventListeners() {
-        // Fermeture de la modal
-        this.elements.modalClose?.addEventListener('click', () => this.closeModal());
-
-        // Fermer la modal au clic sur le background
-        this.elements.boatsModal?.addEventListener('click', (e) => {
-            if (e.target === this.elements.boatsModal) {
-                this.closeModal();
-            }
-        });
-
-        // Fermer la modal avec la touche Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeModal();
-            }
-        });
-
         // Gestion de l'orientation (mobile)
         window.addEventListener('orientationchange', () => {
             this.handleOrientationChange();
@@ -100,41 +78,6 @@ class UIManager {
      */
     enableChannelSelect() {
         this.elements.channelSelect.disabled = false;
-    }
-
-    /**
-     * Affiche la modal avec les détails des bateaux
-     * @param {Array} boats - Liste des bateaux à afficher (déjà filtrés par jour via l'API)
-     */
-    showBoatsModal(boats) {
-        this.elements.boatsList.innerHTML = '';
-
-        if (boats && boats.length === 0) {
-            this.elements.boatsList.innerHTML =
-                '<p style="text-align: center; color: #999;">Pas de bateaux à cet endroit</p>';
-        } else {
-            // Trier les bateaux par heure décroissante (plus récents d'abord)
-            const sortedBoats = sortBoatsByTimeDescending(boats);
-
-            sortedBoats.forEach(boat => {
-                const boatEl = createBoatDetailsCard(boat);
-                this.elements.boatsList.appendChild(boatEl);
-            });
-        }
-
-        this.elements.boatsModal.classList.remove('hidden');
-
-        // Scroll vers le haut de la modal
-        setTimeout(() => {
-            this.elements.boatsList.scrollTop = 0;
-        }, 0);
-    }
-
-    /**
-     * Ferme la modal
-     */
-    closeModal() {
-        this.elements.boatsModal.classList.add('hidden');
     }
 
     /**
