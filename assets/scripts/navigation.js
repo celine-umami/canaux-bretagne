@@ -1,5 +1,6 @@
 import { sortBoatsByTimeDescending } from "./utils/dateTimeutils.js";
 import { createBoatDetailsCard } from "./ui/boatsCardDetails.js";
+import { getNextEcluses } from "./utils/eclus.js";
 
 /** @typedef {import('./types/Boat').Boat} Boat */
 
@@ -94,9 +95,11 @@ export default class NavigationManager {
 
         this.elements.boatsModal.classList.remove('hidden');
 
+        const newtEcluses = getNextEcluses(boats[0]?.ecluse || "", boats[0]?.sens || "").nextEcluse;
+
         // change le titre de la modal
         this.elements.modalTitle.textContent = titleType === "eclus" ?
-            `${boats[0]?.ecluse || ''} / ${boats[0]?.ecluse || ''}` :
+            `${boats[0]?.ecluse || ''} / ${newtEcluses || ''}` :
             `${boats.length} bateau${boats.length > 1 ? 'x' : ''}`;
 
         // Scroll vers le haut de la modal
