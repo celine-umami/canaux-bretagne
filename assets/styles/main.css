@@ -168,6 +168,7 @@ h1 {
     display: flex;
     align-items: center;
     gap: 6px;
+    cursor: pointer;
 }
 
 .canal-card__status-text {

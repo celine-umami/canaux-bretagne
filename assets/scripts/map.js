@@ -21,30 +21,35 @@ class MapManager {
      * @param {Object} channel - L'objet canal
      */
     initMap(channel) {
-        if (this.map) {
-            // Réinitialiser la vue avec des coordonnées par défaut
-            this.map.setView([48, -2], 8);
-        } else {
-            // Créer la carte avec un centre par défaut (centre de la Bretagne)
-            this.map = L.map(this.containerId).setView([48, -2], 8);
+        try {
+            if (this.map) {
+                // Réinitialiser la vue avec des coordonnées par défaut
+                this.map.setView([48, -2], 8);
+            } else {
+                // Créer la carte avec un centre par défaut (centre de la Bretagne)
+                this.map = L.map(this.containerId).setView([48, -2], 8);
 
-            // Ajouter la couche OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '',
-                maxZoom: 19,
-                maxNativeZoom: 18
-            }).addTo(this.map);
+                // Ajouter la couche OpenStreetMap
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '',
+                    maxZoom: 19,
+                    maxNativeZoom: 18
+                }).addTo(this.map);
 
-            // ajoute le contrôle de plein écran
-            this.map.addControl(new L.Control.FullScreen());
+                // ajoute le contrôle de plein écran
+                this.map.addControl(new L.Control.FullScreen());
 
-            // Créer des couches pour les éléments
-            this.pathLayer = L.featureGroup().addTo(this.map);
-            this.markersLayer = L.featureGroup().addTo(this.map);
+                // Créer des couches pour les éléments
+                this.pathLayer = L.featureGroup().addTo(this.map);
+                this.markersLayer = L.featureGroup().addTo(this.map);
+            }
+
+            // Nettoyer les marqueurs précédents
+            this.clearMarkers();
+        } catch (error) {
+            console.error('Erreur lors de l\'initialisation de la carte:', error);
+            throw error;
         }
-
-        // Nettoyer les marqueurs précédents
-        this.clearMarkers();
     }
 
     /**

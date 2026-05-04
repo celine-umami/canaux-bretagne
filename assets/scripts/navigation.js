@@ -5,13 +5,13 @@ import { getNextEcluses } from "./utils/eclus.js";
 /** @typedef {import('./types/Boat').Boat} Boat */
 
 export default class NavigationManager {
-    /** @type {Element | null} */
+    /** @type {HTMLElement | null} */
     pagesHome;
 
-    /** @type {Element | null} */
+    /** @type {HTMLElement | null} */
     pagesMap;
 
-    /** @type {Element | null} */
+    /** @type {HTMLElement | null} */
     bntHomeFooter;
 
     /**
