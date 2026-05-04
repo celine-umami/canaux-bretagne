@@ -182,8 +182,14 @@ class MapManager {
                 // Trouver l'écluse qui correspond EXACTEMENT à ce bateau (num_ecluse + sens)
                 const lock = locks.find(l => l.num_ecluse === numEcluse && l.sens === sens);
 
-                if (!lock || !lock.point_geo_bief) {
-                    console.warn(`⚠️ Écluse non trouvée ou point_geo_bief manquant pour #${numEcluse} (${sens})`);
+
+                if (!lock) {
+                    console.warn(`⚠️ Écluse non trouvée pour #${numEcluse} (${sens})`);
+                    return;
+                }
+
+                if (!lock.point_geo_bief) {
+                    console.warn(`⚠️ point_geo_bief manquant pour #${numEcluse} (${sens})`);
                     return;
                 }
 

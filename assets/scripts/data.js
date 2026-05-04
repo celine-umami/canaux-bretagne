@@ -121,9 +121,29 @@ export async function fetchLocksForChannel(channel) {
             whereClause = encodeURIComponent(`voie_navigable="${channel}"`);
         }
 
-        const url = `${API_CONFIG.ECLUSE_DATA}?where=${whereClause}&limit=100`;
 
-        return await fetchFromAPI(url);
+        let offset = 0;
+
+        const data = {
+            results: [],
+            total_count: null
+        };
+
+        let razLimite = 3;
+
+        while (true) {
+            const url = `${API_CONFIG.ECLUSE_DATA}?where=${whereClause}&limit=100&offset=${offset}`;
+            const results = await fetchFromAPI(url);
+
+            if (data.total_count === null) data.total_count = results.total_count;
+            data.results.push(...(results.results || []));
+
+            if (data.results.length >= data.total_count || razLimite <= 0) break;
+            offset += 100;
+            razLimite--;
+        }
+
+        return data;
     } catch (error) {
         console.error(`Erreur lors du chargement des écluses:`, error);
         throw error;
