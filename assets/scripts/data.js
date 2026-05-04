@@ -11,7 +11,7 @@ import { API_CONFIG } from './config.js';
 async function fetchAllLocksForSpecificChannel(channelName) {
     try {
         const whereClause = encodeURIComponent(`voie_navigable="${channelName}"`);
-        const requests = [0, 100, 200].map(offset => {
+        const requests = [0, 100, 200, 300].map(offset => {
             const url = `${API_CONFIG.ECLUSE_DATA}?where=${whereClause}&limit=100&offset=${offset}`;
             return fetchFromAPI(url);
         });
@@ -204,7 +204,9 @@ export async function fetchBoatsForChannel(channel, targetDate = null) {
 
         const url = `${API_CONFIG.DATA_URL}?where=${whereClause}&limit=100`;
 
-        return await fetchFromAPI(url);
+        const results = await fetchFromAPI(url);
+
+        return results;
     } catch (error) {
         console.error(`Erreur lors du chargement des bateaux:`, error);
         throw error;
