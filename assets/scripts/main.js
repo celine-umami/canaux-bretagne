@@ -8,7 +8,7 @@ import { logConfig } from './config.js';
 import MapManager from './map.js';
 import UIManager from './ui.js';
 import NavigationManager from "./navigation.js";
-import { HomePageManager } from "./home.js";
+import HomePageManager from "./home.js";
 
 /** @typedef {import('./types/Boat').Boat} Boat */
 
@@ -260,9 +260,12 @@ class Application {
         }
 
         // Afficher la modal avec tous les bateaux du bief
-        this.navigationManager.openModal(boats);
+        this.navigationManager.openModal(boats, "eclus");
     }
 }
+
+// export de l'application pour avoir acces au typage
+export default Application;
 
 // Initialiser l'application au chargement du DOM
 document.addEventListener('DOMContentLoaded', () => {
@@ -274,4 +277,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.mapManager = app.mapManager;
     window.uiManager = app.uiManager;
     window.navigationManager = app.navigationManager;
+    window.homePageManager = app.homePageManager;
 });

@@ -4,7 +4,7 @@ import { escapeHtml } from "./utils/htmlUtils.js";
 /** @typedef {import('./types/Channel').Channel} ChannelsType */
 
 
-export class HomePageManager {
+class HomePageManager {
   /** @type {Element | null} */
   channelListContainer;
   bntBack;
@@ -62,7 +62,7 @@ export class HomePageManager {
         this.setTitle(channel.voie_navigable);
         // affiche le bouton de retour en arrière
         this.bntBack.style.display = "flex";
-      })
+      });
 
       this.channelListContainer.appendChild(channelCard);
       voieNavigableChannelRendered.push(channel.voie_navigable);
@@ -123,40 +123,18 @@ export class HomePageManager {
             </div>
         `;
 
+    // ajoute un lesener pour ouvrir la modal de détail des bateux
+    if (boatsForThisSection.length > 0) {
+      const divStatus = cardHTML.querySelector(".canal-card__status");
+
+      divStatus.addEventListener("click", (e) => {
+        e.stopPropagation();
+        window.navigationManager.openModal(boatsForThisSection, "nombreBoats");
+      });
+    }
+
+    // retourne la card
     return cardHTML;
-
-    // return `
-    // <div class="canal-card" style="background-color: #AFCB56;">
-    //     <p class="canal-card__title">Blavet</p>
-    //     <div class="canal-card__footer">
-    //         <div class="canal-card__status">
-    //             <p class="canal-card__status-text">Aucun bateau</p>
-    //         </div>
-    //         <button class="canal-card__button">Accéder</button>
-    //     </div>
-    // </div>
-
-    // <div class="canal-card" style="background-color: #A1B5DC;">
-    //     <p class="canal-card__title">Canal Ille et Rance</p>
-    //     <div class="canal-card__footer">
-    //         <div class="canal-card__status">
-    //             <div class="canal-card__metric">
-    //                 <div class="canal-card__metric-badge">
-    //                     <p class="canal-card__metric-badge-text" style="background-color: #AFCB56;">D</p>
-    //                 </div>
-    //                 <p class="canal-card__metric-text">10 bateux</p>
-    //             </div>
-    //             <div class="canal-card__metric">
-    //                 <div class="canal-card__metric-badge ">
-    //                     <p class="canal-card__metric-badge-text" style="background-color: #F1B453;">M</p>
-    //                 </div>
-    //                 <p class="canal-card__metric-text">3 bateaux</p>
-    //             </div>
-    //         </div>
-    //         <button class="canal-card__button">Accéder</button>
-    //     </div>
-    // </div>
-    // `
   }
 
   /**
@@ -201,3 +179,5 @@ export class HomePageManager {
 
   getBoatsForSectionChannel() { }
 }
+
+export default HomePageManager;

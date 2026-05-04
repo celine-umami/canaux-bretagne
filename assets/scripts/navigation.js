@@ -1,6 +1,8 @@
 import { sortBoatsByTimeDescending } from "./utils/dateTimeutils.js";
 import { createBoatDetailsCard } from "./ui/boatsCardDetails.js";
 
+/** @typedef {import('./types/Boat').Boat} Boat */
+
 export default class NavigationManager {
     /** @type {Element | null} */
     pagesHome;
@@ -15,6 +17,8 @@ export default class NavigationManager {
      * @typedef {Object} UIElements
      * @property {HTMLElement | null} boatsModal
      * @property {HTMLElement | null} boatsList
+     * @property {HTMLElement | null} modalClose
+     * @property {HTMLElement | null} modalTitle
      */
     elements;
 
@@ -27,6 +31,7 @@ export default class NavigationManager {
             boatsModal: document.getElementById('boats-modal'),
             boatsList: document.getElementById('boats-list'),
             modalClose: document.querySelector('.modal-close'),
+            modalTitle: document.querySelector('.modal-content h2'),
         };
 
         this.setupEventListeners();
@@ -68,12 +73,10 @@ export default class NavigationManager {
 
     /**
      * ouvre le modal de détails des bateaux
+     * @param {Boat[]} boats - Liste des bateaux à afficher (déjà filtrés par jour via l'API)
+     * @param {"eclus" | "nombreBoats"} titleType - eclus affiche entre les 2 écluses actuel, nombreBoats affiche le nombre de bateaux à cet endroit
      */
-    /**
-     * Affiche la modal avec les détails des bateaux
-     * @param {Array} boats - Liste des bateaux à afficher (déjà filtrés par jour via l'API)
-     */
-    openModal(boats) {
+    openModal(boats, titleType) {
         this.elements.boatsList.innerHTML = '';
 
         if (boats && boats.length === 0) {
@@ -90,6 +93,11 @@ export default class NavigationManager {
         }
 
         this.elements.boatsModal.classList.remove('hidden');
+
+        // change le titre de la modal
+        this.elements.modalTitle.textContent = titleType === "eclus" ?
+            `${boats[0]?.ecluse || ''} / ${boats[0]?.ecluse || ''}` :
+            `${boats.length} bateau${boats.length > 1 ? 'x' : ''}`;
 
         // Scroll vers le haut de la modal
         setTimeout(() => {
