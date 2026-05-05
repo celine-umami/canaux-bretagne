@@ -372,9 +372,18 @@ h1 {
     border-radius: 8px;
     border-width: 2px;
     text-align: center;
-    padding: 0.75rem;
+    padding: 0.75rem calc(0.75rem + 16px) 0.75rem 0.75rem;
     cursor: pointer;
     background-color: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+
+    background-image: url("/assets/images/icons/Chevron%20down.svg");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    background-size: 16px 16px;
 }
 
 .dropdown-sub-channel {
@@ -390,10 +399,15 @@ h1 {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     -webkit-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     padding-right: 2.5rem;
+    position: relative;
+
+    background-image: url("/assets/images/icons/Chevron%20down.svg");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 16px;
 }
 
 .dropdown-channel:focus,
