@@ -98,7 +98,7 @@ class HomePageManager {
     cardHTML.innerHTML = `
             <p class="canal-card__title">${escapeHtml(title)}</p>
             <div class="canal-card__footer">
-                <div class="canal-card__status">
+                <div class="canal-card__status${(descendant === 0 && montant === 0) ? " canal-card__status--empty" : ""}">
 
                 ${(descendant === 0 && montant === 0) ? `<p class="canal-card__status-text">Aucun bateau</p>` : `
                   ${descendant > 0 ? `
