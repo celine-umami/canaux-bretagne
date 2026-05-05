@@ -19,6 +19,9 @@ class HomePageManager {
       this.bntBack.style.display = "none";
       this.renderChannelList(window.app.channels.results);
     })
+
+    // pour avoir un titre au chargement on affiche un titre qui sera écrasé ou pas par la suite
+    this.setTitle("Cartographie des canaux");
   }
 
   /**

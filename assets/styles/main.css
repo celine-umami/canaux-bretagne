@@ -76,6 +76,64 @@ body {
     gap: 16px;
 }
 
+/* Chargement accueil */
+.home-loading {
+    width: 100%;
+    min-height: 180px;
+    border-radius: 8px;
+    background: #FFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.home-loading::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    bottom: -45%;
+    right: -7%;
+    height: 150%;
+    width: 100%;
+    background-image: url(/assets/images/form_background.svg);
+    background-repeat: no-repeat;
+    background-position: right;
+    background-size: contain;
+    opacity: 0.25;
+}
+
+.home-loading__spinner {
+    width: 34px;
+    height: 34px;
+    border: 4px solid #F5F5F5;
+    border-top-color: #9E6376;
+    border-radius: 50%;
+    animation: homeLoadingSpin 0.8s linear infinite;
+    position: relative;
+    z-index: 1;
+}
+
+.home-loading__text {
+    color: #5D5D5D;
+    font-size: 14px;
+    letter-spacing: -0.24px;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes homeLoadingSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* fin chargement acceil */
+
 .hidden {
     display: none;
 }
