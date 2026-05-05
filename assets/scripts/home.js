@@ -109,14 +109,14 @@ class HomePageManager {
                       <div class="canal-card__metric-badge">
                         <p class="canal-card__metric-badge-text" style="background-color: #AFCB56;">D</p>
                       </div>
-                      <p class="canal-card__metric-text">${descendant} bateux</p>
+                      <p class="canal-card__metric-text">${descendant} bateau${descendant > 1 ? "x" : ""}</p>
                     </div>` : ""}
                   ${montant > 0 ? `
                     <div class="canal-card__metric">
                       <div class="canal-card__metric-badge ">
                         <p class="canal-card__metric-badge-text" style="background-color: #F1B453;">M</p>
                       </div>
-                      <p class="canal-card__metric-text">${montant} bateaux</p>
+                      <p class="canal-card__metric-text">${montant} bateau${montant > 1 ? "x" : ""}</p>
                     </div>` : ""}
                   `}
 
