@@ -13,6 +13,38 @@ body {
     background-color: #f5f5f5;
 }
 
+/* composant */
+/* scroll bare custom */
+.custom-scrollbar {
+    scrollbar-width: auto;
+    scrollbar-color: #9E6376 #F5F5F5;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #F5F5F5;
+    border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #9E6376;
+    border-radius: 999px;
+    border: 2px solid #F5F5F5;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #7f4f5f;
+}
+
+.custom-scrollbar:focus-visible {
+    outline: 3px solid rgba(158, 99, 118, 0.35);
+    outline-offset: 3px;
+}
+
 /* Conteneur principal */
 .app-container {
     display: flex;
