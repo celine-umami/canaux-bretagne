@@ -15,12 +15,13 @@ export default class NavigationManager {
     bntHomeFooter;
 
     /**
-     * @typedef {Object} UIElements
+     * @typedef {Object} NavigationElements
      * @property {HTMLElement | null} boatsModal
      * @property {HTMLElement | null} boatsList
      * @property {HTMLElement | null} modalClose
      * @property {HTMLElement | null} modalTitle
      */
+    /** @type {NavigationElements} */
     elements;
 
     constructor() {

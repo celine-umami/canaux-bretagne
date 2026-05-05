@@ -3,10 +3,22 @@
  * Gère les interactions DOM, le dropdown et la modal
  */
 
+/** @typedef {import('./types/Channel').Channel} Channel */
+
 class UIManager {
+    /**
+     * @typedef {Object} UiElements
+     * @property {HTMLSelectElement | null} channelSelect
+     * @property {HTMLSelectElement | null} subChannelSelect
+     * @property {HTMLElement | null} mapContainer
+     */
+    /** @type {UiElements} */
+    elements;
+
     constructor() {
         this.elements = {
             channelSelect: document.getElementById('channel-select'),
+            subChannelSelect: document.getElementById('subchannel-select'),
             mapContainer: document.getElementById('map')
         };
 
@@ -33,17 +45,28 @@ class UIManager {
         // Vider le dropdown
         this.elements.channelSelect.innerHTML = '';
 
+        // les voie navigable qui on une sous section déja rajouter au dropdown pour éviter les doublons
+        const voieNavigableSousSection = [];
+
         // Ajouter les options
         channels.forEach(channel => {
-            const option = document.createElement('option');
-            // Utiliser displayName si disponible (pour les sections), sinon voie_navigable
-            const displayText = channel.displayName || channel.voie_navigable;
-            // Utiliser id comme value si disponible, sinon voie_navigable
-            const value = channel.id || channel.voie_navigable;
 
-            option.value = value;
-            option.textContent = displayText;
-            this.elements.channelSelect.appendChild(option);
+            // si il a pas de sous section grace a displayName c'est une section, sinon c'est un canal
+            if (!channel.displayName || !voieNavigableSousSection.includes(channel.voie_navigable)) {
+                const option = document.createElement('option');
+                // Utiliser displayName si disponible (pour les sections), sinon voie_navigable
+                const displayText = channel.voie_navigable;
+                // Utiliser id comme value si disponible, sinon voie_navigable
+                const value = channel.id || channel.voie_navigable;
+
+                option.value = value;
+                option.textContent = displayText;
+                this.elements.channelSelect.appendChild(option);
+
+                if (channel.displayName) {
+                    voieNavigableSousSection.push(channel.voie_navigable);
+                }
+            }
         });
 
         // Sélectionner le premier canal par défaut
@@ -56,6 +79,44 @@ class UIManager {
         this.elements.channelSelect.addEventListener('change', (e) => {
             onChannelChange(e.target.value);
         });
+
+        // Écouter les changements de la sous section
+        this.elements.subChannelSelect.addEventListener('change', (e) => {
+            onChannelChange(e.target.value, true);
+        });
+    }
+
+
+    /**
+     * Réinitialise le dropdown des sous-canaux (le vide et remet le bonne option par défaut)
+     * @param {Channel} channelSelected - Le canal sélectionné pour remplir les sous sections
+     * @param {Channel[]} allChannels - La liste de tous les canaux pour trouver les sous sections du canal sélectionné
+     */
+    resetSubChannelSelect(channelSelected, allChannels) {
+        // supprime les options précédentes
+        this.elements.subChannelSelect.innerHTML = '';
+
+        // Ajouter les options
+        allChannels.forEach(channel => {
+
+            // si il a pas de sous section grace a displayName c'est une section, sinon c'est un canal
+            if (channel.voie_navigable === channelSelected.voie_navigable) {
+                const option = document.createElement('option');
+                const displayText = channel.displayName || channel.voie_navigable;
+                const value = channel.id || channel.voie_navigable;
+
+                option.value = value;
+                option.textContent = displayText;
+                this.elements.subChannelSelect.appendChild(option);
+            }
+        });
+
+        this.elements.subChannelSelect.classList.remove('hidden');
+        this.elements.subChannelSelect.value = channelSelected.id || channelSelected.voie_navigable;
+    }
+
+    hideSubChannelSelect() {
+        this.elements.subChannelSelect.classList.add('hidden');
     }
 
     /**
@@ -71,6 +132,7 @@ class UIManager {
      */
     disableChannelSelect() {
         this.elements.channelSelect.disabled = true;
+        this.elements.subChannelSelect.disabled = true;
     }
 
     /**
@@ -78,6 +140,7 @@ class UIManager {
      */
     enableChannelSelect() {
         this.elements.channelSelect.disabled = false;
+        this.elements.subChannelSelect.disabled = false;
     }
 
     /**

@@ -11,6 +11,7 @@ import NavigationManager from "./navigation.js";
 import HomePageManager from "./home.js";
 
 /** @typedef {import('./types/Boat').Boat} Boat */
+/** @typedef {import('./types/Channel').Channel} Channel */
 
 /**
  * Formate une date au format "XX mois XXXX"
@@ -42,6 +43,7 @@ class Application {
         /** @type {HomePageManager} */
         this.homePageManager = new HomePageManager();
 
+        /** @type {Channel[]} */
         this.channels = [];
         this.currentChannel = null;
         this.boats = [];
@@ -100,9 +102,21 @@ class Application {
             }
 
             // Initialiser le dropdown avec les canaux
-            this.uiManager.initChannelSelect(this.channels.results, (channelId) =>
+            this.uiManager.initChannelSelect(this.channels.results, (channelId, isSubSection) => {
+                const channelSelected = this.channels.results.find(ch => (ch.id || ch.voie_navigable) === channelId);
+
+                // si le canal sélectionner a pas de sous section on cache le dropdown des sous section
+                if (!channelSelected.displayName) {
+                    this.uiManager.hideSubChannelSelect();
+                } else {
+                    // si la sous section a été sélectionner depuis le dropdown de sous section on ne fait rien
+                    if (!isSubSection) {
+                        this.uiManager.resetSubChannelSelect(channelSelected, this.channels.results);
+                    }
+                }
+
                 this.handleChannelChange(channelId)
-            );
+            });
 
             // Charger le canal par défaut (le premier de la liste)
             await this.loadChannel(this.channels.results[0]);
