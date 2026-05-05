@@ -107,8 +107,6 @@ class Application {
             // Charger le canal par défaut (le premier de la liste)
             await this.loadChannel(this.channels.results[0]);
 
-            this.navigationManager.navigate("home");
-
         } catch (error) {
             this.uiManager.showError('Erreur lors de l\'initialisation de l\'application');
             console.error(error);

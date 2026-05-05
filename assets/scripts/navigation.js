@@ -70,6 +70,12 @@ export default class NavigationManager {
 
         // change l'état du bouton home dans le footer
         pageName === "home" ? this.bntHomeFooter?.classList.add("active") : this.bntHomeFooter?.classList.remove("active");
+
+        if (pageName === "map") {
+            requestAnimationFrame(() => {
+                window.mapManager?.resize();
+            });
+        }
     }
 
     /**
