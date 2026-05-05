@@ -34,6 +34,7 @@ canaux-bretagne/
 │   │   ├── main.css             # Styles globaux et responsive
 │   │   └── map.css              # Styles personnalisés Leaflet
 │   ├── scripts/
+│   │   ├── types/               # Dossier pour les types jsDoc
 │   │   ├── main.js              # Classe Application - orchestration et init
 │   │   ├── map.js               # Classe MapManager - gestion de la carte Leaflet
 │   │   ├── data.js              # Fonctions de fetch API (canaux, écluses, bateaux)
@@ -277,6 +278,50 @@ Voir `config.js` pour les URLs des 2 datasets Bretagne Data:
 - **ECLUSE_DATA**: Écluses et biefs (ref-ecluse-biefs)
 
 Les données sont récupérées dynamiquement par `data.js` selon le canal sélectionné.
+
+## 🧩 Typage JSDoc
+
+Une grande partie de l'application utilise **JSDoc** afin d'apporter un typage statique au code JavaScript, sans mettre en place de compilation TypeScript.
+
+Le projet reste donc en **JavaScript vanilla**, mais bénéficie de plusieurs avantages dans l'éditeur :
+
+- autocomplétion plus fiable ;
+- détection anticipée de certaines erreurs ;
+- meilleure lisibilité des structures de données ;
+- documentation technique directement dans le code ;
+- typage des classes, fonctions, callbacks et objets manipulés par l'application.
+
+Le typage est **principalement défini directement dans chaque fichier** (classes, méthodes, variables DOM, etc.) pour garder une bonne proximité entre le code et sa documentation.
+
+Cependant, les types métiers réutilisés dans plusieurs parties de l'application (comme `Boat`, `Channel`, etc.) sont **centralisés dans le dossier** :
+
+```txt
+assets/scripts/types/
+```
+
+afin d’être facilement importés et partagés entre les modules.
+
+Exemple d'import de type :
+
+```js
+/** @typedef {import('./types/Boat').Boat} Boat */
+```
+
+Exemple d'utilisation :
+
+```js
+/**
+ * Affiche les détails des bateaux dans la modal.
+ * @param {Boat[]} boats - Liste des bateaux à afficher.
+ * @param {"eclus" | "nombreBoats"} titleType - Type de titre à afficher.
+ */
+openModal(boats, titleType) {
+    // ...
+}
+```
+
+Cette approche permet de conserver une architecture légère, sans build, tout en améliorant la maintenabilité du code.
+
 
 ## 📱 Responsive & Accessibilité
 
