@@ -82,7 +82,7 @@ class UIManager {
 
         // Écouter les changements de la sous section
         this.elements.subChannelSelect.addEventListener('change', (e) => {
-            onChannelChange(e.target.value, true);
+            onChannelChange(e.target.value);
         });
     }
 
@@ -113,6 +113,28 @@ class UIManager {
 
         this.elements.subChannelSelect.classList.remove('hidden');
         this.elements.subChannelSelect.value = channelSelected.id || channelSelected.voie_navigable;
+    }
+
+    /**
+     * Change les dropdown pour correspondre au canal sélectionner
+     * @param {Channel} channel 
+     * @param {Channel[]} allChannel 
+     */
+    handleChangeCannel(channel, allChannel) {
+        // si le canal sélectionner a pas de sous section on cache le dropdown des sous section
+        if (!channel.displayName) {
+            // cache le dropdown des sous section
+            this.hideSubChannelSelect();
+
+            // change le dropdown de canal pour correspondre au canal sélectionner
+            this.elements.channelSelect.value = channel.id || channel.voie_navigable;
+            return;
+        }
+
+        this.resetSubChannelSelect(channel, allChannel);
+
+        const firtChannelForSection = allChannel.find(c => c.voie_navigable === channel.voie_navigable);
+        this.elements.channelSelect.value = firtChannelForSection.id || firtChannelForSection.voie_navigable;
     }
 
     hideSubChannelSelect() {
@@ -180,14 +202,6 @@ class UIManager {
                 mapInstance.resize();
             }
         }, 100);
-    }
-
-    /**
-     * Change le canal sélectionné dans le dropdown
-     * @param {string} channelId 
-     */
-    handleChangeCannel(channelId) {
-        this.elements.channelSelect.value = channelId;
     }
 
     /**

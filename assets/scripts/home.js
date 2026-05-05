@@ -51,8 +51,8 @@ class HomePageManager {
       bntGoMap.addEventListener("click", (e) => {
         // si il a pas de sous section ou que c'est déja une sous section on va directement sur la map
         if (channel.id_section === undefined || isSubSection) {
-          window.uiManager.handleChangeCannel(isSubSection ? channel.id : channel.voie_navigable);
-          window.app.handleChannelChange(isSubSection ? channel.id : channel.voie_navigable);
+          window.uiManager.handleChangeCannel(channel, window.app.channels.results);
+          window.app.handleChannelSelect(isSubSection ? channel.id : channel.voie_navigable);
           window.navigationManager.navigate("map");
           return;
         }

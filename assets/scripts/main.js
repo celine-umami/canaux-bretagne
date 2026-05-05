@@ -102,21 +102,7 @@ class Application {
             }
 
             // Initialiser le dropdown avec les canaux
-            this.uiManager.initChannelSelect(this.channels.results, (channelId, isSubSection) => {
-                const channelSelected = this.channels.results.find(ch => (ch.id || ch.voie_navigable) === channelId);
-
-                // si le canal sélectionner a pas de sous section on cache le dropdown des sous section
-                if (!channelSelected.displayName) {
-                    this.uiManager.hideSubChannelSelect();
-                } else {
-                    // si la sous section a été sélectionner depuis le dropdown de sous section on ne fait rien
-                    if (!isSubSection) {
-                        this.uiManager.resetSubChannelSelect(channelSelected, this.channels.results);
-                    }
-                }
-
-                this.handleChannelChange(channelId)
-            });
+            this.uiManager.initChannelSelect(this.channels.results, (channelId) => this.handleChannelSelect(channelId));
 
             // Charger le canal par défaut (le premier de la liste)
             await this.loadChannel(this.channels.results[0]);
@@ -125,6 +111,21 @@ class Application {
             this.uiManager.showError('Erreur lors de l\'initialisation de l\'application');
             console.error(error);
         }
+    }
+
+    /**
+     * change le canal afficher correctement en changeant les dropdown et en affichant la bonne section ou sous section
+     * @param {string} channelId id du canal ou de la sous section à afficher
+     */
+    handleChannelSelect(channelId) {
+        const channelSelected = this.channels.results.find(ch => (ch.id || ch.voie_navigable) === channelId);
+
+        if (channelSelected) {
+            // change le visuel des dropdown pour correspondre au canal sélectionné
+            this.uiManager.handleChangeCannel(channelSelected, this.channels.results);
+        }
+
+        this.handleChannelChange(channelId)
     }
 
     /**
