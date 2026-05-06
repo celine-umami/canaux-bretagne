@@ -10,6 +10,8 @@ async function main() {
         loksForChannel[channel.voie_navigable] = await fetchAllLocksForSpecificChannel(channel.voie_navigable);
     }
 
+    console.log(loksForChannel);
+
 
     // partie créeation de la map
     // Carte
@@ -43,7 +45,8 @@ async function main() {
                 color: colors[0],
                 fillColor: colors[0],
                 fillOpacity: 1
-            }).addTo(layer_point_geo_bief);
+            }).bindPopup(`${Object.entries(lock).map(([key, valeur]) => `<p class='popup'>${key}: ${valeur}</p>`).join("")}`)
+                .addTo(layer_point_geo_bief);
         });
 
         // geo_point
@@ -56,7 +59,8 @@ async function main() {
                 color: colors[1],
                 fillColor: colors[1],
                 fillOpacity: 1
-            }).addTo(layer_geo_point);
+            }).bindPopup(`${Object.entries(lock).map(([key, valeur]) => `<p class='popup'>${key}: ${valeur}</p>`).join("")}`)
+                .addTo(layer_geo_point);
         });
 
         // geo_shape
@@ -69,7 +73,8 @@ async function main() {
                 color: colors[2],
                 fillColor: colors[2],
                 fillOpacity: 1
-            }).addTo(layer_geo_shape);
+            }).bindPopup(`${Object.entries(lock).map(([key, valeur]) => `<p class='popup'>${key}: ${valeur}</p>`).join("")}`)
+                .addTo(layer_geo_shape);
         });
 
     });
