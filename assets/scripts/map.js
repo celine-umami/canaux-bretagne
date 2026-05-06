@@ -157,8 +157,13 @@ class MapManager {
      */
     addBoats(boats, locks, onBoatClick) {
 
-        if (!boats || boats.length === 0 || !locks || locks.length === 0) {
-            console.warn("⚠️ Pas de bateaux ou d'écluses");
+        if (!boats || boats.length === 0) {
+            console.warn("⚠️ [MapManager.addBoats()] Pas de bateaux");
+            return;
+        }
+
+        if (!locks || locks.length === 0) {
+            console.warn("⚠️ [MapManager.addBoats()] Pas d'écluses");
             return;
         }
 
@@ -174,8 +179,13 @@ class MapManager {
                 const numEcluse = boat.num_ecluse;
                 const sens = boat.sens;
 
-                if (numEcluse === null || numEcluse === undefined || !sens) {
-                    console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse ou sens`);
+                if (numEcluse === null || numEcluse === undefined) {
+                    console.warn(`⚠️ [MapManager.addBoats()] Bateau ${boat.nom_bateau} sans num_ecluse`);
+                    return;
+                }
+
+                if (!sens) {
+                    console.warn(`⚠️ [MapManager.addBoats()] Bateau ${boat.nom_bateau} sans sens`);
                     return;
                 }
 
@@ -184,12 +194,12 @@ class MapManager {
 
 
                 if (!lock) {
-                    console.warn(`⚠️ Écluse non trouvée pour #${numEcluse} (${sens})`);
+                    console.warn(`⚠️ [MapManager.addBoats()] Écluse non trouvée pour #${numEcluse} (${sens})`);
                     return;
                 }
 
                 if (!lock.point_geo_bief) {
-                    console.warn(`⚠️ point_geo_bief manquant pour #${numEcluse} (${sens})`);
+                    console.warn(`⚠️ [MapManager.addBoats()] point_geo_bief manquant pour #${numEcluse} (${sens})`);
                     return;
                 }
 
