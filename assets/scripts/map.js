@@ -5,6 +5,10 @@
 
 import { fetchLocksForChannel, fetchBoatsForChannel } from './data.js';
 
+/** @typedef {import('./types/Boat').Boat} Boat */
+/** @typedef {import('./types/Channel').Channel} Channel */
+/** @typedef {import('./types/Lock.js').Lock} Lock */
+
 class MapManager {
     constructor(containerId) {
         this.containerId = containerId;
@@ -151,11 +155,12 @@ class MapManager {
 
     /**
      * Ajoute les marqueurs des bateaux
-     * @param {Array} boats - Tableau des bateaux
-     * @param {Array} locks - Tableau des écluses
+     * @param {Boat[]} boats - Tableau des bateaux
+     * @param {Lock} locks - Tableau des écluses
+     * @param {Channel} channel - Tableau des écluses
      * @param {Function} onBoatClick - Callback pour le clic
      */
-    addBoats(boats, locks, onBoatClick) {
+    addBoats(boats, locks, channel, onBoatClick) {
 
         if (!boats || boats.length === 0) {
             console.warn("⚠️ [MapManager.addBoats()] Pas de bateaux");
@@ -178,6 +183,12 @@ class MapManager {
             deduplicatedBoats.forEach(boat => {
                 const numEcluse = boat.num_ecluse;
                 const sens = boat.sens;
+
+                // si il a une ecluse supèrieure ou inferieure au max du cannal, on ignore le bateau c'est normal c'est que il cherche a placer un bateux d"une autre section du cannal
+                if ((channel.maxEcluse && numEcluse > channel.maxEcluse) || (channel.minEcluse && numEcluse < channel.minEcluse)) {
+                    // npas de warn car c'est normal, le bateau est juste dans une autre section du canal
+                    return;
+                }
 
                 if (numEcluse === null || numEcluse === undefined) {
                     console.warn(`⚠️ [MapManager.addBoats()] Bateau ${boat.nom_bateau} sans num_ecluse`);
@@ -357,7 +368,7 @@ class MapManager {
 
             this.addLocks(locks);
             this.setupLockMarkersZoomListener();
-            this.addBoats(boats, locks, onBoatClick);
+            this.addBoats(boats, locks, channel, onBoatClick);
 
             // Ajuster la vue pour afficher toutes les écluses
             if (locks && locks.length > 0) {
