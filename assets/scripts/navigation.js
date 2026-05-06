@@ -106,7 +106,7 @@ export default class NavigationManager {
 
         // change le titre de la modal
         this.elements.modalTitle.textContent = titleType === "eclus" ?
-            `${boats[0]?.ecluse || ''} / ${newtEcluses || ''}` :
+            `${boats[0]?.ecluse || ''}${newtEcluses ? ` / ${newtEcluses}` : ""}` :
             `${boats.length} bateau${boats.length > 1 ? 'x' : ''}`;
 
         // Scroll vers le haut de la modal
