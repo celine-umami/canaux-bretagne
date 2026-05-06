@@ -12,6 +12,7 @@ import HomePageManager from "./home.js";
 
 /** @typedef {import('./types/Boat').Boat} Boat */
 /** @typedef {import('./types/Channel').Channel} Channel */
+/** @typedef {import('./types/Lock').Lock} Lock */
 
 /**
  * Formate une date au format "XX mois XXXX"
@@ -47,6 +48,8 @@ class Application {
         this.channels = [];
         this.currentChannel = null;
         this.boats = [];
+
+        /** @type {Lock[]} */
         this.locks = [];
 
         /**

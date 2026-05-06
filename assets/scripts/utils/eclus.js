@@ -19,6 +19,11 @@ export function getNextEcluses(currentEcluse, sens) {
         return a.num_ecluse - b.num_ecluse
     });
 
+    // si on ce trouve sur le canal de Nantes a brest on inverse le sens car les écluse sont pas dans le bon sens
+    if (sortedLocks[0]?.voie_navigable === "Canal de Nantes à Brest") {
+        sortedLocks.reverse();
+    }
+
     // récupère l'index de l'écluse actuelle dans la liste triée
     const currentLockIndex = sortedLocks.findIndex(lock => lock.nom_formulaire === currentEcluse);
     if (currentLockIndex === -1) {
