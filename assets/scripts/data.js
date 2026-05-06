@@ -8,7 +8,7 @@ import { API_CONFIG } from './config.js';
 /**
  * Récupère toutes les écluses pour un canal spécifique (avec pagination)
  */
-async function fetchAllLocksForSpecificChannel(channelName) {
+export async function fetchAllLocksForSpecificChannel(channelName) {
     try {
         const whereClause = encodeURIComponent(`voie_navigable="${channelName}"`);
         const requests = [0, 100, 200, 300].map(offset => {
