@@ -96,8 +96,8 @@ export default class NavigationManager {
         this.currentPage = pageName;
 
         if (pageName === "map") {
-            // affiche le cachage temporaire des bouton de temps
-            document.querySelector("#footer-group-button")?.classList.remove("hidden");
+            // affiche le bouton hier (btn-yesterday) qui est caché sur la page d'accueil
+            document.querySelector("#btn-yesterday")?.classList.remove("hidden");
 
             this.pagesMap?.classList.remove("hidden");
 
@@ -108,8 +108,8 @@ export default class NavigationManager {
         }
 
         if (pageName === "home") {
-            // affiche le cachage temporaire des bouton de temps
-            document.querySelector("#footer-group-button")?.classList.add("hidden");
+            // cache le bouton hier (btn-yesterday) sur la page d'accueil
+            document.querySelector("#btn-yesterday")?.classList.add("hidden");
 
             // vu que on est sur la page d'acceil on active le bouton
             this.pagesHome?.classList.remove("hidden");
