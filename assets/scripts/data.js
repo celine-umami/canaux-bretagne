@@ -4,21 +4,17 @@
  */
 
 import { API_CONFIG } from './config.js';
+import { OdsReqeust } from './odsRequest.js';
 
 /**
  * Récupère toutes les écluses pour un canal spécifique (avec pagination)
  */
 export async function fetchAllLocksForSpecificChannel(channelName) {
     try {
-        const whereClause = encodeURIComponent(`voie_navigable="${channelName}"`);
-        const requests = [0, 100, 200, 300].map(offset => {
-            const url = `${API_CONFIG.ECLUSE_DATA}?where=${whereClause}&limit=100&offset=${offset}`;
-            return fetchFromAPI(url);
-        });
+        const url = new OdsReqeust(API_CONFIG.ECLUSE_DATA)
+            .addWhere(`voie_navigable="${channelName}"`)
 
-        const responses = await Promise.all(requests);
-        const allLocks = responses.flatMap(r => r.results || []);
-        return allLocks;
+        return (await url.execute()).results;
     } catch (error) {
         console.error(`Erreur lors du chargement des écluses pour ${channelName}:`, error);
         throw error;
@@ -31,8 +27,10 @@ export async function fetchAllLocksForSpecificChannel(channelName) {
  */
 export async function fetchChannel() {
     try {
-        const url = `${API_CONFIG.ECLUSE_DATA}?group_by=voie_navigable&limit=20`;
-        const data = await fetchFromAPI(url);
+        const url = new OdsReqeust(API_CONFIG.ECLUSE_DATA)
+            .addParam("group_by", "voie_navigable");
+
+        const data = await url.execute();
 
         const processedResults = [];
 
@@ -99,8 +97,9 @@ export async function fetchChannel() {
  */
 export async function fetchLocksForChannel(channel) {
     try {
-        let whereClause;
         let channelName;
+
+        const url = new OdsReqeust(API_CONFIG.ECLUSE_DATA);
 
         // Si channel est un objet
         if (typeof channel === 'object') {
@@ -108,40 +107,20 @@ export async function fetchLocksForChannel(channel) {
 
             // Si c'est un canal divisé (minEcluse/maxEcluse), ajouter les limites d'écluse
             if (channel.minEcluse !== undefined && channel.maxEcluse !== undefined) {
-                whereClause = encodeURIComponent(
-                    `voie_navigable="${channelName}" AND num_ecluse >= ${channel.minEcluse} AND num_ecluse <= ${channel.maxEcluse}`
-                );
+                url.addWhere(`voie_navigable="${channelName}"`)
+                    .addWhere(`num_ecluse >= ${channel.minEcluse}`)
+                    .addWhere(`num_ecluse <= ${channel.maxEcluse}`);
             } else {
                 // Cas normal: juste par voie_navigable
-                whereClause = encodeURIComponent(`voie_navigable="${channelName}"`);
+                url.addWhere(`voie_navigable="${channelName}"`);
             }
         } else {
             // Cas où channel est une string (rétro-compatibilité)
             channelName = channel;
-            whereClause = encodeURIComponent(`voie_navigable="${channel}"`);
+            url.addWhere(`voie_navigable="${channel}"`);
         }
 
-
-        let offset = 0;
-
-        const data = {
-            results: [],
-            total_count: null
-        };
-
-        let razLimite = 3;
-
-        while (true) {
-            const url = `${API_CONFIG.ECLUSE_DATA}?where=${whereClause}&limit=100&offset=${offset}`;
-            const results = await fetchFromAPI(url);
-
-            if (data.total_count === null) data.total_count = results.total_count;
-            data.results.push(...(results.results || []));
-
-            if (data.results.length >= data.total_count || razLimite <= 0) break;
-            offset += 100;
-            razLimite--;
-        }
+        const data = url.execute()
 
         return data;
     } catch (error) {
@@ -169,7 +148,9 @@ export async function fetchBoatsForChannel(channel, targetDate = null) {
 
         channelName = channelName === "Blavet" ? "Canal du Blavet" : channelName;
 
-        let whereClause;
+        const url = new OdsReqeust(API_CONFIG.DATA_URL)
+            .addWhere(`type_embarcation != "Canoë / Kayak"`) // exclure les canoës/kayaks du filtrage
+            .addWhere(`voie_navigable="${channelName}"`);
 
         if (targetDate) {
             // Filtrer sur une date spécifique
@@ -178,10 +159,10 @@ export async function fetchBoatsForChannel(channel, targetDate = null) {
             nextDate.setDate(nextDate.getDate() + 1);
             const nextDateStr = nextDate.toISOString().split('T')[0];
 
-            // Exclure les canoës/kayaks du filtrage
-            whereClause = encodeURIComponent(
-                `voie_navigable="${channelName}" AND date >= date'${targetDateStr}' AND date < date'${nextDateStr}' AND type_embarcation != "Canoë / Kayak"`
-            );
+            // ajoute une condition a la request pour que les bateux soit sur une plage de date
+            url
+                .addWhere(`date >= date'${targetDateStr}'`)
+                .addWhere(`date < date'${nextDateStr}'`)
         } else {
             // Comportement par défaut: hier et aujourd'hui
             const today = new Date();
@@ -196,15 +177,12 @@ export async function fetchBoatsForChannel(channel, targetDate = null) {
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
             // Filtrer par voie_navigable et par date (bateaux d'hier et d'aujourd'hui)
-            // Exclure les canoës/kayaks du filtrage
-            whereClause = encodeURIComponent(
-                `voie_navigable="${channelName}" AND date >= date'${todayStr}' AND date < date'${tomorrowStr}' AND type_embarcation != "Canoë / Kayak"`
-            );
+            url
+                .addWhere(`date >= date'${todayStr}'`)
+                .addWhere(`date < date'${tomorrowStr}'`)
         }
 
-        const url = `${API_CONFIG.DATA_URL}?where=${whereClause}&limit=100`;
-
-        const results = await fetchFromAPI(url);
+        const results = await url.execute()
 
         return results;
     } catch (error) {
@@ -218,7 +196,7 @@ export async function fetchBoatsForChannel(channel, targetDate = null) {
  * @param {string} url - L'URL à requêter
  * @returns {Promise<Object>} Les données JSON reçues
  */
-async function fetchFromAPI(url) {
+export async function fetchFromAPI(url) {
     try {
         if (API_CONFIG.DEBUG) {
             console.info(`🔄 Fetch: ${url}`);
