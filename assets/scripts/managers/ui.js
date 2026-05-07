@@ -27,7 +27,8 @@ class UIManager {
         this.elements = {
             channelSelect: document.getElementById('channel-select'),
             subChannelSelect: document.getElementById('subchannel-select'),
-            mapContainer: document.getElementById('map')
+            mapContainer: document.getElementById('map'),
+            appFooter: document.querySelector('.app-footer')
         };
 
         this.setupEventListeners();
