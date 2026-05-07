@@ -3,7 +3,8 @@
  * Gère les interactions DOM, le dropdown et la modal
  */
 
-/** @typedef {import('./types/Channel').Channel} Channel */
+import Application from '../main.js';
+/** @typedef {import('../types/Channel.js').Channel} Channel */
 
 class UIManager {
     /**
@@ -15,7 +16,14 @@ class UIManager {
     /** @type {UiElements} */
     elements;
 
-    constructor() {
+    /** @type {Application} */
+    app;
+
+    /**
+     * @param {Application} app - L'instance de l'application principale pour accéder aux données et méthodes globales
+     */
+    constructor(app) {
+        this.app = app;
         this.elements = {
             channelSelect: document.getElementById('channel-select'),
             subChannelSelect: document.getElementById('subchannel-select'),

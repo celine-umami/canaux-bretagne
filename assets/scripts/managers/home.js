@@ -1,15 +1,25 @@
-import { escapeHtml } from "./utils/htmlUtils.js";
+import { escapeHtml } from "../utils/htmlUtils.js";
+import Application from '../main.js';
 
-/** @typedef {import('./types/Boat').Boat} Boat */
-/** @typedef {import('./types/Channel').Channel} ChannelsType */
+/** @typedef {import('../types/Boat.js').Boat} Boat */
+/** @typedef {import('../types/Channel.js').Channel} ChannelsType */
 
 
 class HomePageManager {
   /** @type {Element | null} */
   channelListContainer;
+
+  /** @type {Element | null} */
   bntBack;
 
-  constructor() {
+  /** @type {Application} */
+  app;
+
+  /**
+   * @param {Application} app - L'instance de l'application principale pour accéder aux données et méthodes globales
+   */
+  constructor(app) {
+    this.app = app;
     this.channelListContainer = document.querySelector("#channel-list-container");
 
     // initalise le bouton de retour en arrière pour les sous section

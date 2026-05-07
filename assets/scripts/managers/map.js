@@ -3,14 +3,24 @@
  * Responsable de l'initialisation et du rendu de la carte
  */
 
-import { fetchLocksForChannel, fetchBoatsForChannel } from './data.js';
+import { fetchLocksForChannel, fetchBoatsForChannel } from '../data/data.js';
+import Application from "../main.js";
 
-/** @typedef {import('./types/Boat').Boat} Boat */
-/** @typedef {import('./types/Channel').Channel} Channel */
-/** @typedef {import('./types/Lock.js').Lock} Lock */
+/** @typedef {import('../types/Boat.js').Boat} Boat */
+/** @typedef {import('../types/Channel.js').Channel} Channel */
+/** @typedef {import('../types/Lock.js').Lock} Lock */
 
 class MapManager {
-    constructor(containerId) {
+    /** @type {Application} */
+    app;
+
+
+    /**
+     * @param {Application} app - Instance de l'application principale pour accéder aux autres managers et données partagées
+     * @param {string} containerId - ID de l'élément DOM où la carte sera rendue
+     */
+    constructor(app, containerId) {
+        this.app = app;
         this.containerId = containerId;
         this.map = null;
         this.pathLayer = null;

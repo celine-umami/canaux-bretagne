@@ -1,14 +1,20 @@
-import { sortBoatsByTimeDescending } from "./utils/dateTimeutils.js";
-import { createBoatDetailsCard } from "./ui/boatsCardDetails.js";
-import { getNextEcluses } from "./utils/eclus.js";
+import { sortBoatsByTimeDescending } from "../utils/dateTimeutils.js";
+import { createBoatDetailsCard } from "../ui/boatsCardDetails.js";
+import { getNextEcluses } from "../utils/eclus.js";
+import Application from "../main.js";
+import { fetchBoatsForChannel } from "../data/data.js";
 
-/** @typedef {import('./types/Boat').Boat} Boat */
+/** @typedef {import('../types/Boat.js').Boat} Boat */
 
 /**
  * @typedef {"home" | "map"} PageName - Le nom de la page pour la navigation
  */
 
 export default class NavigationManager {
+
+    /** @type {Application} */
+    app;
+
     /** @type {HTMLElement | null} */
     pagesHome;
 
@@ -31,7 +37,14 @@ export default class NavigationManager {
     /** @type {NavigationElements} */
     elements;
 
-    constructor() {
+    /**@type {Date | null} - jour sélectioner comme filtre */
+    selectedDay = null;
+
+    /**
+     * @param {Application} app - Instance de l'application principale pour accéder aux autres managers et données partagées
+     */
+    constructor(app) {
+        this.app = app;
         this.pagesHome = document.querySelector("#home-page");
         this.pagesMap = document.querySelector("#map-page");
         this.bntHomeFooter = document.querySelector("#bnt-home-footer");
@@ -142,5 +155,43 @@ export default class NavigationManager {
      */
     closeModal() {
         this.elements.boatsModal.classList.add('hidden');
+    }
+
+    /**
+     * Change la date sélectionnée et met à jour les données affichées en conséquence (met a jour la home page et les bateaux sur la map en fonction de sur quelle page on est)
+     * @param {Date | null} date - la nouvelle date sélectionnée (ou null pour réinitialiser le filtre)
+     */
+    async setNewSelectedDay(date) {
+        this.selectedDay = date;
+
+        const uiManager = this.app.uiManager;
+
+        try {
+            // met la map en loading pendant le chargement des données
+            uiManager.showLoading();
+
+            if (!this.app.currentChannel) {
+                throw new Error('Aucun canal sélectionné');
+            }
+
+            // Récupérer les bateaux pour la date spécifiée
+            const boatsResponse = await fetchBoatsForChannel(this.app.currentChannel, date);
+            // stocke les bateaux dans l'app pour les réutiliser plus tard
+            this.app.boats = boatsResponse.results || [];
+
+            // Appeler loadChannel en passant les locks et bateaux déjà chargés
+            // Cela gère le nettoyage propre des marqueurs et l'ajout des nouveaux
+            await this.app.mapManager.loadChannel(
+                this.app.currentChannel,
+                (boatGroup) => this.app.handleBoatClick(boatGroup),
+                this.app.locks,
+                this.app.boats
+            );
+        } catch (error) {
+            console.error('Erreur lors du rechargement des bateaux:', error);
+        } finally {
+            // enlever le loading une fois que tout est fait (même en cas d'erreur)
+            uiManager.hideLoading();
+        }
     }
 }
