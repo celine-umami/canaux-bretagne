@@ -96,6 +96,9 @@ export default class NavigationManager {
         this.currentPage = pageName;
 
         if (pageName === "map") {
+            // affiche le cachage temporaire des bouton de temps
+            document.querySelector("#footer-group-button")?.classList.remove("hidden");
+
             this.pagesMap?.classList.remove("hidden");
 
             requestAnimationFrame(() => {
@@ -105,6 +108,9 @@ export default class NavigationManager {
         }
 
         if (pageName === "home") {
+            // affiche le cachage temporaire des bouton de temps
+            document.querySelector("#footer-group-button")?.classList.add("hidden");
+
             // vu que on est sur la page d'acceil on active le bouton
             this.pagesHome?.classList.remove("hidden");
 
