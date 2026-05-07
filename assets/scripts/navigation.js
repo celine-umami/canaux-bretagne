@@ -77,6 +77,10 @@ export default class NavigationManager {
                 window.mapManager?.resize();
             });
         }
+
+        if (pageName === "home") {
+            window.homePageManager?.renderChannelList(window.app.channels.results);
+        }
     }
 
     /**

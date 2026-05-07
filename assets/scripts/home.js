@@ -16,7 +16,7 @@ class HomePageManager {
     this.bntBack = document.querySelector("#home-page-bnt-back");
 
     this.bntBack.addEventListener("click", () => {
-      this.bntBack.style.display = "none";
+      this.hideBackButton();
       this.renderChannelList(window.app.channels.results);
     })
 
@@ -30,6 +30,12 @@ class HomePageManager {
    * @param {boolean} isSubSection - pour que ca traite les sous section ou pas
    */
   renderChannelList(channels, isSubSection = false) {
+
+    // si on est pas dans une sous section on cache le bouton de retour en arrière
+    if (!isSubSection) {
+      this.hideBackButton();
+    }
+
     this.setTitle("Cartographie des canaux");
 
     // écrase un potentiel ancien contenu (ex: "Chargement...")
@@ -64,7 +70,7 @@ class HomePageManager {
         this.renderChannelList(channels.filter(c => c.voie_navigable === channel.voie_navigable), true);
         this.setTitle(channel.voie_navigable);
         // affiche le bouton de retour en arrière
-        this.bntBack.style.display = "flex";
+        this.showBackButton();
       });
 
       this.channelListContainer.appendChild(channelCard);
@@ -181,6 +187,16 @@ class HomePageManager {
   }
 
   getBoatsForSectionChannel() { }
+
+  /** Affiche le bouton retour au menu principal pour quitter les sous section */
+  showBackButton() {
+    this.bntBack.style.display = "flex";
+  }
+
+  /** Cache le bouton retour en arrère */
+  hideBackButton() {
+    this.bntBack.style.display = "none";
+  }
 }
 
 export default HomePageManager;
