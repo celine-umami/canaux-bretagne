@@ -35,11 +35,27 @@ export function sortBoatsByTimeDescending(boats) {
         try {
             const timeA = new Date(boatA.idtech).getTime();
             const timeB = new Date(boatB.idtech).getTime();
-            
+
             return timeB - timeA; // Décroissant (plus récent d'abord)
         } catch (error) {
             console.error('Erreur tri date:', error);
             return 0;
         }
     });
+}
+
+/**
+ * Formate une date au format "XX mois XXXX"
+ * @param {Date} date - La date à formater
+ * @returns {string} La date formatée
+ */
+export function formatDateToFrench(date) {
+    const months = [
+        'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+    ];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
 }

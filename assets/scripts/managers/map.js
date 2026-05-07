@@ -3,10 +3,24 @@
  * Responsable de l'initialisation et du rendu de la carte
  */
 
-import { fetchLocksForChannel, fetchBoatsForChannel } from './data.js';
+import { fetchLocksForChannel, fetchBoatsForChannel } from '../data/data.js';
+import Application from "../main.js";
+
+/** @typedef {import('../types/Boat.js').Boat} Boat */
+/** @typedef {import('../types/Channel.js').Channel} Channel */
+/** @typedef {import('../types/Lock.js').Lock} Lock */
 
 class MapManager {
-    constructor(containerId) {
+    /** @type {Application} */
+    app;
+
+
+    /**
+     * @param {Application} app - Instance de l'application principale pour accéder aux autres managers et données partagées
+     * @param {string} containerId - ID de l'élément DOM où la carte sera rendue
+     */
+    constructor(app, containerId) {
+        this.app = app;
         this.containerId = containerId;
         this.map = null;
         this.pathLayer = null;
@@ -21,30 +35,35 @@ class MapManager {
      * @param {Object} channel - L'objet canal
      */
     initMap(channel) {
-        if (this.map) {
-            // Réinitialiser la vue avec des coordonnées par défaut
-            this.map.setView([48, -2], 8);
-        } else {
-            // Créer la carte avec un centre par défaut (centre de la Bretagne)
-            this.map = L.map(this.containerId).setView([48, -2], 8);
+        try {
+            if (this.map) {
+                // Réinitialiser la vue avec des coordonnées par défaut
+                this.map.setView([48, -2], 8);
+            } else {
+                // Créer la carte avec un centre par défaut (centre de la Bretagne)
+                this.map = L.map(this.containerId).setView([48, -2], 8);
 
-            // Ajouter la couche OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '',
-                maxZoom: 19,
-                maxNativeZoom: 18
-            }).addTo(this.map);
+                // Ajouter la couche OpenStreetMap
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '',
+                    maxZoom: 19,
+                    maxNativeZoom: 18
+                }).addTo(this.map);
 
-            // ajoute le contrôle de plein écran
-            this.map.addControl(new L.Control.FullScreen());
+                // ajoute le contrôle de plein écran
+                this.map.addControl(new L.Control.FullScreen());
 
-            // Créer des couches pour les éléments
-            this.pathLayer = L.featureGroup().addTo(this.map);
-            this.markersLayer = L.featureGroup().addTo(this.map);
+                // Créer des couches pour les éléments
+                this.pathLayer = L.featureGroup().addTo(this.map);
+                this.markersLayer = L.featureGroup().addTo(this.map);
+            }
+
+            // Nettoyer les marqueurs précédents
+            this.clearMarkers();
+        } catch (error) {
+            console.error('Erreur lors de l\'initialisation de la carte:', error);
+            throw error;
         }
-
-        // Nettoyer les marqueurs précédents
-        this.clearMarkers();
     }
 
     /**
@@ -144,90 +163,113 @@ class MapManager {
         return deduped;
     }
 
-        /**
+    /**
      * Ajoute les marqueurs des bateaux
-     * @param {Array} boats - Tableau des bateaux
-     * @param {Array} locks - Tableau des écluses
+     * @param {Boat[]} boats - Tableau des bateaux
+     * @param {Lock} locks - Tableau des écluses
+     * @param {Channel} channel - Tableau des écluses
      * @param {Function} onBoatClick - Callback pour le clic
      */
-    addBoats(boats, locks, onBoatClick) {
+    addBoats(boats, locks, channel, onBoatClick) {
 
-    if (!boats || boats.length === 0 || !locks || locks.length === 0) {
-        console.warn("⚠️ Pas de bateaux ou d'écluses");
-        return;
-    }
+        if (!boats || boats.length === 0) {
+            console.warn("⚠️ [MapManager.addBoats()] Pas de bateaux");
+            return;
+        }
 
-    try {
-        // Dédupliquer les bateaux (garder le plus récent par nom)
-        const deduplicatedBoats = this.deduplicateBoats(boats);
+        if (!locks || locks.length === 0) {
+            console.warn("⚠️ [MapManager.addBoats()] Pas d'écluses");
+            return;
+        }
 
-        // Grouper les bateaux par position géographique (lat, lng)
-        // Les bateaux Montant/Descendant au même endroit seront ensemble
-        const boatsByGeoPosition = new Map();
+        try {
+            // Dédupliquer les bateaux (garder le plus récent par nom)
+            const deduplicatedBoats = this.deduplicateBoats(boats);
 
-        deduplicatedBoats.forEach(boat => {
-            const numEcluse = boat.num_ecluse;
-            const sens = boat.sens;
+            // Grouper les bateaux par position géographique (lat, lng)
+            // Les bateaux Montant/Descendant au même endroit seront ensemble
+            const boatsByGeoPosition = new Map();
 
-            if (numEcluse === null || numEcluse === undefined || !sens) {
-                console.warn(`⚠️ Bateau ${boat.nom_bateau} sans num_ecluse ou sens`);
-                return;
-            }
+            deduplicatedBoats.forEach(boat => {
+                const numEcluse = boat.num_ecluse;
+                const sens = boat.sens;
 
-            // Trouver l'écluse qui correspond EXACTEMENT à ce bateau (num_ecluse + sens)
-            const lock = locks.find(l => l.num_ecluse === numEcluse && l.sens === sens);
-
-            if (!lock || !lock.point_geo_bief) {
-                console.warn(`⚠️ Écluse non trouvée ou point_geo_bief manquant pour #${numEcluse} (${sens})`);
-                return;
-            }
-
-            // Clé de position: utiliser les coordonnées géographiques
-            // Cela regroupe les bateaux à la même position physique
-            const geoKey = `${lock.point_geo_bief.lat},${lock.point_geo_bief.lon}`;
-
-            if (!boatsByGeoPosition.has(geoKey)) {
-                boatsByGeoPosition.set(geoKey, {
-                    boats: [],
-                    lat: lock.point_geo_bief.lat,
-                    lng: lock.point_geo_bief.lon
-                });
-            }
-
-            boatsByGeoPosition.get(geoKey).boats.push(boat);
-        });
-
-        // Créer les marqueurs pour chaque position géographique
-        boatsByGeoPosition.forEach((data, geoKey) => {
-            const boatList = data.boats;
-
-            // Compter les bateaux par direction
-            const countByDirection = boatList.reduce((acc, boat) => {
-                const direction = boat.sens || 'Inconnu';
-                acc[direction] = (acc[direction] || 0) + 1;
-                return acc;
-            }, {});
-
-            // Créer le marqueur avec les totaux montant et descendant
-            const marker = L.marker([data.lat, data.lng], {
-                icon: this.createBoatIcon(countByDirection['Montant'] || 0, countByDirection['Descendant'] || 0),
-                title: `${boatList.length} bateau(x)`
-            });
-
-            // Ajouter un callback pour le clic
-            marker.on('click', () => {
-                if (onBoatClick) {
-                    onBoatClick(boatList);
+                // si il a une ecluse supèrieure ou inferieure au max du cannal, on ignore le bateau c'est normal c'est que il cherche a placer un bateux d"une autre section du cannal
+                if ((channel.maxEcluse && numEcluse > channel.maxEcluse) || (channel.minEcluse && numEcluse < channel.minEcluse)) {
+                    // npas de warn car c'est normal, le bateau est juste dans une autre section du canal
+                    return;
                 }
+
+                if (numEcluse === null || numEcluse === undefined) {
+                    console.warn(`⚠️ [MapManager.addBoats()] Bateau ${boat.nom_bateau} sans num_ecluse`);
+                    return;
+                }
+
+                if (!sens) {
+                    console.warn(`⚠️ [MapManager.addBoats()] Bateau ${boat.nom_bateau} sans sens`);
+                    return;
+                }
+
+                // Trouver l'écluse qui correspond EXACTEMENT à ce bateau (num_ecluse + sens)
+                const lock = locks.find(l => l.num_ecluse === numEcluse && l.sens === sens);
+
+
+                if (!lock) {
+                    console.warn(`⚠️ [MapManager.addBoats()] Écluse non trouvée pour #${numEcluse} (${sens})`);
+                    return;
+                }
+
+                if (!lock.point_geo_bief) {
+                    console.warn(`⚠️ [MapManager.addBoats()] point_geo_bief manquant pour #${numEcluse} (${sens})`);
+                    return;
+                }
+
+                // Clé de position: utiliser les coordonnées géographiques
+                // Cela regroupe les bateaux à la même position physique
+                const geoKey = `${lock.point_geo_bief.lat},${lock.point_geo_bief.lon}`;
+
+                if (!boatsByGeoPosition.has(geoKey)) {
+                    boatsByGeoPosition.set(geoKey, {
+                        boats: [],
+                        lat: lock.point_geo_bief.lat,
+                        lng: lock.point_geo_bief.lon
+                    });
+                }
+
+                boatsByGeoPosition.get(geoKey).boats.push(boat);
             });
 
-            marker.addTo(this.markersLayer);
-            this.currentMarkers.push(marker);
-        });
-    } catch (error) {
-        console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
+            // Créer les marqueurs pour chaque position géographique
+            boatsByGeoPosition.forEach((data, geoKey) => {
+                const boatList = data.boats;
+
+                // Compter les bateaux par direction
+                const countByDirection = boatList.reduce((acc, boat) => {
+                    const direction = boat.sens || 'Inconnu';
+                    acc[direction] = (acc[direction] || 0) + 1;
+                    return acc;
+                }, {});
+
+                // Créer le marqueur avec les totaux montant et descendant
+                const marker = L.marker([data.lat, data.lng], {
+                    icon: this.createBoatIcon(countByDirection['Montant'] || 0, countByDirection['Descendant'] || 0),
+                    title: `${boatList.length} bateau(x)`
+                });
+
+                // Ajouter un callback pour le clic
+                marker.on('click', () => {
+                    if (onBoatClick) {
+                        onBoatClick(boatList);
+                    }
+                });
+
+                marker.addTo(this.markersLayer);
+                this.currentMarkers.push(marker);
+            });
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'ajout des bateaux:', error);
+        }
     }
-}
 
     /**
      * Crée une icône personnalisée pour les bateaux
@@ -282,7 +324,7 @@ class MapManager {
     setupLockMarkersZoomListener() {
         const updateLockMarkersOpacity = () => {
             const currentZoom = this.map.getZoom();
-            
+
             // Opacité basée sur le zoom: moins visible au dézoom
             // A zoom 8: opacité = 0 (invisible)
             // A zoom 10: opacité = 0.3
@@ -296,7 +338,7 @@ class MapManager {
             } else if (currentZoom >= 10) {
                 opacity = 0.6;
             }
-            
+
             this.lockMarkers.forEach(marker => {
                 const element = marker.getElement();
                 if (element) {
@@ -336,7 +378,7 @@ class MapManager {
 
             this.addLocks(locks);
             this.setupLockMarkersZoomListener();
-            this.addBoats(boats, locks, onBoatClick);
+            this.addBoats(boats, locks, channel, onBoatClick);
 
             // Ajuster la vue pour afficher toutes les écluses
             if (locks && locks.length > 0) {
@@ -360,7 +402,7 @@ class MapManager {
         this.currentMarkers = [];
         this.lockMarkers = [];
         this.boatsClickHandlers.clear();
-        
+
         // Retirer les listeners de zoom
         if (this.map) {
             this.map.off('zoomend');

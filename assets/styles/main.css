@@ -13,11 +13,44 @@ body {
     background-color: #f5f5f5;
 }
 
+/* composant */
+/* scroll bare custom */
+.custom-scrollbar {
+    scrollbar-width: auto;
+    scrollbar-color: #9E6376 #F5F5F5;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #F5F5F5;
+    border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #9E6376;
+    border-radius: 999px;
+    border: 2px solid #F5F5F5;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #7f4f5f;
+}
+
+.custom-scrollbar:focus-visible {
+    outline: 3px solid rgba(158, 99, 118, 0.35);
+    outline-offset: 3px;
+}
+
 /* Conteneur principal */
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     width: 100%;
 }
 
@@ -45,9 +78,267 @@ body {
     object-position: center;
 }
 
+/* gestionaire de pages */
+.map-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.home-page {
+    padding: 16px 12px 0px 12px;
+    flex-grow: 1;
+    flex-basis: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.home-page .warpper-contenaire-card {
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.home-page .contenaire-card {
+    padding: 15px 0 130px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Chargement accueil */
+.home-loading {
+    width: 100%;
+    min-height: 180px;
+    border-radius: 8px;
+    background: #FFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.home-loading::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    bottom: -45%;
+    right: -7%;
+    height: 150%;
+    width: 100%;
+    background-image: url(/assets/images/form_background.svg);
+    background-repeat: no-repeat;
+    background-position: right;
+    background-size: contain;
+    opacity: 0.25;
+}
+
+.home-loading__spinner {
+    width: 34px;
+    height: 34px;
+    border: 4px solid #F5F5F5;
+    border-top-color: #9E6376;
+    border-radius: 50%;
+    animation: homeLoadingSpin 0.8s linear infinite;
+    position: relative;
+    z-index: 1;
+}
+
+.home-loading__text {
+    color: #5D5D5D;
+    font-size: 14px;
+    letter-spacing: -0.24px;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes homeLoadingSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* fin chargement acceil */
+
+.hidden {
+    display: none;
+}
+
+/* commun a toute les pages */
+.contenaire-titre {
+    position: relative;
+}
+
+.bnt-back {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    background-color: #1E1E1E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+}
+
+.bnt-back img {
+    transform: rotate(180deg);
+    width: 13px;
+    height: 13px;
+    object-fit: cover;
+    object-position: center;
+}
+
+h1 {
+    color: #000;
+    text-align: center;
+    font-family: "Region Bretagne New";
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 140%;
+}
+
+/* card cannal */
+.canal-card {
+    width: 100%;
+    padding: 16px;
+    border-radius: 8px;
+    height: 132px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.canal-card::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    bottom: -45%;
+    right: -7%;
+    height: 150%;
+    width: 100%;
+    background-image: url(/assets/images/form_background.svg);
+    background-repeat: no-repeat;
+    background-position: right;
+    background-size: contain;
+    opacity: 0.4;
+}
+
+.canal-card__title {
+    color: #1E1E1E;
+    font-family: "Region Bretagne New";
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 140%;
+    position: relative;
+    z-index: 1;
+}
+
+.canal-card__footer {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    position: relative;
+    z-index: 1;
+}
+
+.canal-card__status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.canal-card__status.canal-card__status--empty {
+    cursor: default;
+}
+
+.canal-card__status-text {
+    color: #5D5D5D;
+    font-size: 12px;
+    letter-spacing: -0.24px;
+}
+
+.canal-card__button {
+    padding: 8px 30px 8px 8px;
+    border-radius: 6px;
+    background: #000;
+    border: none;
+    color: #FFF;
+    font-size: 11px;
+    letter-spacing: -0.22px;
+    position: relative;
+    cursor: pointer;
+}
+
+.canal-card__button::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    height: 18px;
+    width: 18px;
+    background-image: url(/assets/images/icons/majesticons_arrow-up.svg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+
+.canal-card__metric {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px 2px 2px;
+    border-radius: 150px;
+    background-color: #FFF;
+}
+
+.canal-card__metric-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.canal-card__metric-badge-text {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-family: "Region Bretagne New";
+    font-size: 10px;
+}
+
+.canal-card__metric-text {
+    color: #000;
+    font-size: 12px;
+    letter-spacing: -0.24px;
+}
+
+/* fin card cannal */
+
 /* Controls Section - Dropdown */
 .controls-section {
-    background-color: #fff;
+    background-color: #F6F8F7;
     border-bottom: 2px solid #e0e0e0;
     padding: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -70,20 +361,32 @@ body {
 }
 
 /* Dropdown styles */
-.dropdown-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
 
-.dropdown-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #333;
+.dropdown-channel {
+    color: #000;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 140%;
+    width: fit-content;
+    border-color: transparent;
+    border-radius: 8px;
+    border-width: 2px;
     text-align: center;
+    padding: 0.75rem calc(0.75rem + 16px) 0.75rem 0.75rem;
+    cursor: pointer;
+    background-color: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+
+    background-image: url("/assets/images/icons/Chevron%20down.svg");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    background-size: 16px 16px;
 }
 
-.dropdown-menu {
+.dropdown-sub-channel {
     width: 100%;
     max-width: 400px;
     padding: 0.75rem;
@@ -96,20 +399,28 @@ body {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     -webkit-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     padding-right: 2.5rem;
+    position: relative;
+
+    background-image: url("/assets/images/icons/Chevron%20down.svg");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 16px;
 }
 
-.dropdown-menu:focus,
-.dropdown-menu:hover {
+.dropdown-channel:focus,
+.dropdown-channel:hover,
+.dropdown-sub-channel:focus,
+.dropdown-sub-channel:hover {
     border-color: #4a90e2;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
     outline: none;
 }
 
-.dropdown-menu:disabled {
+.dropdown-channel:disabled,
+.dropdown-sub-channel:disabled {
     background-color: #f0f0f0;
     opacity: 0.6;
     cursor: not-allowed;
@@ -120,8 +431,13 @@ body {
     flex: 1;
     width: 100%;
     min-height: 0;
+    height: 100%;
     overflow: hidden;
-    padding-bottom: 120px;
+    /* padding-bottom: 120px; */
+}
+
+.maps {
+    height: 100%;
 }
 
 /* Modal styles */
@@ -134,7 +450,7 @@ body {
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: flex-end;
-    z-index: 1000;
+    z-index: 1010;
     animation: slideIn 0.3s ease;
 }
 
@@ -157,9 +473,10 @@ body {
     width: 100%;
     max-height: 80vh;
     border-radius: 16px 16px 0 0;
-    padding: 1.5rem;
-    overflow-y: auto;
+    padding: 24px 14px 24px 24px;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-close {
@@ -189,12 +506,19 @@ body {
 
 .modal-content h2 {
     font-size: 1.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 10px;
     color: #1a1a1a;
     padding-right: 2rem;
 }
 
 /* Listes de bateaux */
+.warpper-boats-list {
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1;
+    padding-right: 10px;
+}
+
 .boats-list {
     display: flex;
     flex-direction: column;
@@ -401,6 +725,14 @@ body {
     }
 }
 
+
+/* ------------------------ home pages ---------------------------------- */
+
+
+
+
+/* ------------------------ END home pages ---------------------------------- */
+
 /* Footer sticky */
 .app-footer {
     position: fixed;
@@ -434,10 +766,12 @@ body {
     width: 18px;
     height: 18px;
     object-fit: cover;
+    transition: filter 0.4s ease;
 }
 
 .footer-home.active .footer-icon {
     filter: brightness(0) saturate(100%) invert(51%) sepia(5%) saturate(3243%) hue-rotate(289deg) brightness(83%) contrast(81%);
+    transition: filter 0.4s ease;
 }
 
 .footer-text {

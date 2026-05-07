@@ -25,35 +25,102 @@
             </div>
         </header>
 
-        <!-- Section du dropdown -->
-        <div class="controls-section">
-            <div class="controls-content">
-                <select id="channel-select" class="dropdown-menu" aria-label="Sélectionner un canal">
-                    <option value="">Chargement...</option>
-                </select>
+        <div class="home-page" id="home-page">
+            <div class="contenaire-titre">
+                <button id="home-page-bnt-back" class="bnt-back" style="display: none;">
+                    <img src="/assets/images/icons/majesticons_arrow-up.svg" alt="">
+                </button>
+                <h1 id="home-page-title">
+                    <!-- titre rendu par le JS -->
+                </h1>
             </div>
+
+            <div class="warpper-contenaire-card custom-scrollbar">
+                <div id="channel-list-container" class="contenaire-card">
+
+                    <!-- loder qui sera écraser -->
+                    <div class="home-loading" role="status" aria-live="polite">
+                        <div class="home-loading__spinner"></div>
+                        <p class="home-loading__text">Chargement des canaux...</p>
+                    </div>
+                    <!-- fin du lodader qui sera écraser -->
+
+                    <!-- <div class="canal-card" style="background-color: #AFCB56;">
+                        <p class="canal-card__title">Blavet</p>
+                        <div class="canal-card__footer">
+                            <div class="canal-card__status">
+                                <p class="canal-card__status-text">Aucun bateau</p>
+                            </div>
+                            <button class="canal-card__button">Accéder</button>
+                        </div>
+                    </div>
+
+                    <div class="canal-card" style="background-color: #A1B5DC;">
+                        <p class="canal-card__title">Canal Ille et Rance</p>
+                        <div class="canal-card__footer">
+                            <div class="canal-card__status">
+                                <div class="canal-card__metric">
+                                    <div class="canal-card__metric-badge">
+                                        <p class="canal-card__metric-badge-text" style="background-color: #AFCB56;">D</p>
+                                    </div>
+                                    <p class="canal-card__metric-text">10 bateux</p>
+                                </div>
+                                <div class="canal-card__metric">
+                                    <div class="canal-card__metric-badge ">
+                                        <p class="canal-card__metric-badge-text" style="background-color: #F1B453;">M</p>
+                                    </div>
+                                    <p class="canal-card__metric-text">3 bateaux</p>
+                                </div>
+                            </div>
+                            <button class="canal-card__button">Accéder</button>
+                        </div>
+                    </div> -->
+                </div>
+            </div>
+
         </div>
 
-        <!-- Conteneur de la carte -->
-        <main class="map-container" id="map"></main>
+        <div class="map-page hidden" id="map-page">
+            <!-- Section du dropdown -->
+            <div class="controls-section">
+                <div class="controls-content">
+                    <select id="channel-select" class="dropdown-channel" aria-label="Sélectionner un canal">
+                        <!-- option injecter en js -->
+                        <option value="">Chargement...</option>
+                    </select>
+                    <select id="subchannel-select" class="dropdown-sub-channel hidden" aria-label="Sélectionner un sous canal">
+                        <!-- option injecter en js -->
+                        <option value="">Chargement...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Conteneur de la carte -->
+            <div class="map-container">
+                <main class="maps" id="map"></main>
+            </div>
+        </div>
 
         <!-- Modal détails bateaux -->
         <div id="boats-modal" class="modal hidden">
             <div class="modal-content">
                 <button class="modal-close" aria-label="Fermer">✕</button>
                 <h2>Détails des bateaux</h2>
-                <div id="boats-list" class="boats-list"></div>
+                <div class="warpper-boats-list custom-scrollbar">
+                    <div id="boats-list" class="boats-list"></div>
+                </div>
             </div>
         </div>
 
         <!-- Footer sticky -->
         <footer class="app-footer">
-            <!-- <button class="footer-home active" aria-label="Accueil" type="button">
+            <!-- active -->
+            <button id="bnt-home-footer" class="footer-home active" aria-label="Accueil" type="button">
                 <img src="./assets/images/icons/home_icon.svg" alt="" class="footer-icon">
                 <span class="footer-text">Accueil</span>
             </button> -->
 
-            <div class="footer-date-group">
+            <div class="footer-date-group hidden" id="footer-group-button">
                 <button class="footer-date-btn" id="btn-yesterday" aria-label="Hier" type="button">
                     <img src="/assets/images/icons/Check.svg" alt="cocher">
                     <p>Hier</p>
