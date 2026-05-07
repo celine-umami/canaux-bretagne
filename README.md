@@ -28,21 +28,41 @@ Cette application permet de :
 
 ```
 canaux-bretagne/
-├── index.html                    # Page HTML principale (SPA)
+├── index.html                         # Page HTML principale (SPA)
+│
 ├── assets/
-│   ├── styles/
-│   │   ├── main.css             # Styles globaux et responsive
-│   │   └── map.css              # Styles personnalisés Leaflet
+│   ├── images/                       # Images, illustrations et icônes de l'application
+│   │
+│   ├── lib/                          # Bibliothèques externes embarquées localement
+│   │   └── leaflet@1.9.4/            # Leaflet + plugin fullscreen
+│   │
 │   ├── scripts/
-│   │   ├── types/               # Dossier pour les types jsDoc
-│   │   ├── main.js              # Classe Application - orchestration et init
-│   │   ├── map.js               # Classe MapManager - gestion de la carte Leaflet
-│   │   ├── data.js              # Fonctions de fetch API (canaux, écluses, bateaux)
-│   │   ├── ui.js                # Classe UIManager - gestion de l'interface DOM
-│   │   └── config.js            # Configuration centralisée (URLs API, clés, paramètres)
-│   ├── images/
-│   │   ├── logo.png             # Logo de l'application
-│   │   └── icons/               # Icônes personnalisées (écluses, bateaux)
+│   │   ├── main.js                   # Point d'entrée principal de l'application
+│   │   │
+│   │   ├── data/                     # Gestion des données et des requêtes API
+│   │   │   ├── config.js             # Configuration centralisée
+│   │   │   ├── data.js               # Récupération et transformation des données
+│   │   │   └── odsRequest.js         # Builder de requêtes Opendatasoft
+│   │   │
+│   │   ├── managers/                 # Managers principaux de l'application
+│   │   │   ├── home.js               # Gestion de la page d'accueil
+│   │   │   ├── map.js                # Gestion de la carte Leaflet
+│   │   │   ├── navigation.js         # Navigation et modales
+│   │   │   └── ui.js                 # Gestion globale de l'interface utilisateur
+│   │   │
+│   │   ├── types/                    # Types JSDoc partagés dans l'application
+│   │   │
+│   │   ├── ui/                       # Composants UI réutilisables
+│   │   │   └── boatsCardDetails.js
+│   │   │
+│   │   └── utils/                    # Fonctions utilitaires pures
+│   │       ├── dateTimeutils.js
+│   │       ├── eclus.js
+│   │       └── htmlUtils.js
+│   │
+│   └── styles/
+│       ├── main.css                  # Styles globaux et responsive
+│       └── map.css                   # Styles spécifiques à la carte
 └── data-sources/
     └── api-specs.md             # Documentation des APIs externes
 ```
