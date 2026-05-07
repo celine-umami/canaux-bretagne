@@ -4,6 +4,10 @@ import { getNextEcluses } from "./utils/eclus.js";
 
 /** @typedef {import('./types/Boat').Boat} Boat */
 
+/**
+ * @typedef {"home" | "map"} PageName - Le nom de la page pour la navigation
+ */
+
 export default class NavigationManager {
     /** @type {HTMLElement | null} */
     pagesHome;
@@ -13,6 +17,9 @@ export default class NavigationManager {
 
     /** @type {HTMLElement | null} */
     bntHomeFooter;
+
+    /** @type {PageName} */
+    currentPage = "home";
 
     /**
      * @typedef {Object} NavigationElements
@@ -63,23 +70,34 @@ export default class NavigationManager {
 
     /**
      * Pour nagiver vers une page
-     * @param {"home" | "map"} pageName Le nom de la page vers laquelle naviguer
+     * @param {PageName} pageName Le nom de la page vers laquelle naviguer
      */
     navigate(pageName) {
-        this.pagesHome && pageName === "home" ? this.pagesHome.classList.remove("hidden") : this.pagesHome?.classList.add("hidden");
-        this.pagesMap && pageName === "map" ? this.pagesMap.classList.remove("hidden") : this.pagesMap?.classList.add("hidden");
+        this.pagesHome?.classList.add("hidden");
+        this.pagesMap?.classList.add("hidden");
 
-        // change l'état du bouton home dans le footer
-        pageName === "home" ? this.bntHomeFooter?.classList.add("active") : this.bntHomeFooter?.classList.remove("active");
+        // par defaut le bouton est pas actif
+        this.bntHomeFooter?.classList.remove("active");
+
+        // on met a jour la page courante
+        this.currentPage = pageName;
 
         if (pageName === "map") {
+            this.pagesMap?.classList.remove("hidden");
+
             requestAnimationFrame(() => {
                 window.mapManager?.resize();
             });
+            return;
         }
 
         if (pageName === "home") {
+            // vu que on est sur la page d'acceil on active le bouton
+            this.pagesHome?.classList.remove("hidden");
+
+            this.bntHomeFooter?.classList.add("active");
             window.homePageManager?.renderChannelList(window.app.channels.results);
+            return;
         }
     }
 
