@@ -108,8 +108,6 @@ export default class NavigationManager {
         }
 
         if (pageName === "home") {
-            // affiche le cachage temporaire des bouton de temps
-            document.querySelector("#footer-group-button")?.classList.add("hidden");
 
             // vu que on est sur la page d'acceil on active le bouton
             this.pagesHome?.classList.remove("hidden");
@@ -173,26 +171,35 @@ export default class NavigationManager {
         const uiManager = this.app.uiManager;
 
         try {
-            // met la map en loading pendant le chargement des données
-            uiManager.showLoading();
+            // peut importe la page on recharge tout les bateaux pour la home page
+            await this.app.loadAllBoats(date);
 
-            if (!this.app.currentChannel) {
-                throw new Error('Aucun canal sélectionné');
+            // si on est sur la page map on recharge les bateaux de la map
+            if (this.currentPage === "map") {
+                // met la map en loading pendant le chargement des données
+                uiManager.showLoading();
+
+                if (!this.app.currentChannel) {
+                    throw new Error('Aucun canal sélectionné');
+                }
+
+                // Récupérer les bateaux pour la date spécifiée
+                const boatsResponse = await fetchBoatsForChannel(this.app.currentChannel, date);
+                // stocke les bateaux dans l'app pour les réutiliser plus tard
+                this.app.boats = boatsResponse.results || [];
+
+                // Appeler loadChannel en passant les locks et bateaux déjà chargés
+                // Cela gère le nettoyage propre des marqueurs et l'ajout des nouveaux
+                await this.app.mapManager.loadChannel(
+                    this.app.currentChannel,
+                    (boatGroup) => this.app.handleBoatClick(boatGroup),
+                    this.app.locks,
+                    this.app.boats
+                );
+            } else if (this.currentPage === "home") {
+                // si on est sur la page d'acceil on met a jour la liste des cannaux (ou sous cannaux)
+                this.app.homePageManager.renderChannelList(this.app.channels.results);
             }
-
-            // Récupérer les bateaux pour la date spécifiée
-            const boatsResponse = await fetchBoatsForChannel(this.app.currentChannel, date);
-            // stocke les bateaux dans l'app pour les réutiliser plus tard
-            this.app.boats = boatsResponse.results || [];
-
-            // Appeler loadChannel en passant les locks et bateaux déjà chargés
-            // Cela gère le nettoyage propre des marqueurs et l'ajout des nouveaux
-            await this.app.mapManager.loadChannel(
-                this.app.currentChannel,
-                (boatGroup) => this.app.handleBoatClick(boatGroup),
-                this.app.locks,
-                this.app.boats
-            );
         } catch (error) {
             console.error('Erreur lors du rechargement des bateaux:', error);
         } finally {
