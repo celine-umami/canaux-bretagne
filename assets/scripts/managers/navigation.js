@@ -170,14 +170,15 @@ export default class NavigationManager {
 
         const uiManager = this.app.uiManager;
 
+        // met la map en loading pendant le chargement des données
+        uiManager.showLoading();
+
         try {
             // peut importe la page on recharge tout les bateaux pour la home page
             await this.app.loadAllBoats(date);
 
             // si on est sur la page map on recharge les bateaux de la map
             if (this.currentPage === "map") {
-                // met la map en loading pendant le chargement des données
-                uiManager.showLoading();
 
                 if (!this.app.currentChannel) {
                     throw new Error('Aucun canal sélectionné');
