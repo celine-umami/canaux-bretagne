@@ -47,6 +47,7 @@ secteur: null
 sens: "Descendant"
 type_embarcation: "Location"
 voie_navigable: "Canal du Blavet"
+bief_destination: "18 - Les bateliers"
  */
 /** Bateau complet qui sort de l'API
  * @typedef {Object} Boat
@@ -57,6 +58,7 @@ voie_navigable: "Canal du Blavet"
  * @property {string} ecluse - nom de l'écluse (ex: "28 - Polvern")
  * @property {string} identite - nom de éclusier
  * @property {string} prenom -prénom de éclusier
+ * @property {string} bief_destination - liste des écluses prévues par le bateux séparé par des ";"
  */
 
 
