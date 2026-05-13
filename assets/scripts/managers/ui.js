@@ -12,6 +12,9 @@ class UIManager {
      * @property {HTMLSelectElement | null} channelSelect
      * @property {HTMLSelectElement | null} subChannelSelect
      * @property {HTMLElement | null} mapContainer
+     * @property {HTMLElement | null} bntHierFooter
+     * @property {HTMLElement | null} bntHaujourdiFooter
+     * @property {HTMLElement | null} bntHomeFooter
      */
     /** @type {UiElements} */
     elements;
@@ -28,7 +31,9 @@ class UIManager {
             channelSelect: document.getElementById('channel-select'),
             subChannelSelect: document.getElementById('subchannel-select'),
             mapContainer: document.getElementById('map'),
-            appFooter: document.querySelector('.app-footer')
+            bntHierFooter: document.querySelector("#btn-yesterday"),
+            bntHaujourdiFooter: document.querySelector("#btn-today"),
+            bntHomeFooter: document.querySelector("#bnt-home-footer"),
         };
 
         this.setupEventListeners();
@@ -217,16 +222,38 @@ class UIManager {
      * Affiche un indicateur de chargement
      */
     showLoading() {
-        this.elements.mapContainer.classList.add('loading');
+        [
+            this.elements.mapContainer,
+            this.elements.bntHierFooter,
+            this.elements.bntHaujourdiFooter,
+            this.elements.bntHomeFooter
+        ].forEach(el => el.classList.add("loading"));
+
         this.disableChannelSelect();
+
+        // désactive pendant le chargement les bouton de la home page dynamique pour allez sur la map le temps que les données se charge
+        document.querySelectorAll("#channel-list-container .canal-card__button, #channel-list-container .canal-card__metric").forEach((bnt) => {
+            bnt.classList.add("loading");
+        });
     }
 
     /**
      * Cache l'indicateur de chargement
      */
     hideLoading() {
-        this.elements.mapContainer.classList.remove('loading');
+        [
+            this.elements.mapContainer,
+            this.elements.bntHierFooter,
+            this.elements.bntHaujourdiFooter,
+            this.elements.bntHomeFooter
+        ].forEach(el => el.classList.remove("loading"));
+
         this.enableChannelSelect();
+
+        // réactve les boutton de la home page dynamique une fois que les données sont chargées
+        document.querySelectorAll("#channel-list-container .canal-card__button, #channel-list-container .canal-card__metric").forEach((bnt) => {
+            bnt.classList.remove("loading");
+        });
     }
 }
 

@@ -168,7 +168,7 @@ class Application {
                 btnToday.classList.add('active');
 
                 const today = new Date();
-                this.navigationManager.setNewSelectedDay(today);
+                this.navigationManager.setNewSelectedDay(null);
             });
         }
 
@@ -210,7 +210,7 @@ class Application {
             this.locks = locksResponse.results || [];
 
             // Récupérer les bateaux pour les utiliser later
-            this.boats = await fetchBoatsForChannel(channel);
+            this.boats = await fetchBoatsForChannel(channel, this.navigationManager.selectedDay);
 
 
 

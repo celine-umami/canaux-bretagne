@@ -357,7 +357,7 @@ class MapManager {
     /**
      * @param {Object} channel - L'objet canal
      * @param {Function} onBoatClick - Callback pour le clic sur un bateau
-     * @param {Array} locks - (Optionnel) Écluses déjà chargées. Si omis, sont fetchées depuis l'API
+     * @param {Lock[]} locks - (Optionnel) Écluses déjà chargées. Si omis, sont fetchées depuis l'API
      * @param {Array} boats - (Optionnel) Bateaux déjà chargés. Si omis, sont fetchés depuis l'API
      */
     async loadChannel(channel, onBoatClick, locks = null, boats = null) {
@@ -372,7 +372,7 @@ class MapManager {
 
             // Si les bateaux ne sont pas fournis, les fetch depuis l'API
             if (!boats) {
-                const boatsResponse = await fetchBoatsForChannel(channel);
+                const boatsResponse = await fetchBoatsForChannel(channel, this.app.navigationManager.selectedDay);
                 boats = boatsResponse.results || [];
             }
 
@@ -383,9 +383,17 @@ class MapManager {
             // Ajuster la vue pour afficher toutes les écluses
             if (locks && locks.length > 0) {
                 const bounds = locks.map(lock => {
-                    const [lat, lng] = lock.geo_point.split(',').map(coord => parseFloat(coord.trim()));
+                    if (!lock.geo_point) return null;
+
+                    const [lat, lng] = lock.geo_point
+                        .split(',')
+                        .map(coord => parseFloat(coord.trim()));
+
+                    if (isNaN(lat) || isNaN(lng)) return null;
+
                     return [lat, lng];
-                });
+                }).filter(coord => coord !== null);
+
                 this.map.fitBounds(L.latLngBounds(bounds), { padding: [20, 20] });
             }
         } catch (error) {
