@@ -1,4 +1,4 @@
-import { sortBoatsByTimeDescending } from "../utils/dateTimeutils.js";
+import { sortBoatsByTimeDescending, formatDateToFrench } from "../utils/dateTimeutils.js";
 import { createBoatDetailsCard } from "../ui/boatsCardDetails.js";
 import { getNextEcluses } from "../utils/eclus.js";
 import Application from "../main.js";
@@ -145,10 +145,16 @@ export default class NavigationManager {
 
         const newtEcluses = getNextEcluses(boats[0]?.ecluse || "", boats[0]?.sens || "").nextEcluse;
 
+        // Récupérer la date sélectionnée (ou aujourd'hui par défaut)
+        const displayDate = this.selectedDay ? new Date(this.selectedDay) : new Date();
+        const dateStr = formatDateToFrench(displayDate);
+
         // change le titre de la modal
-        this.elements.modalTitle.textContent = titleType === "eclus" ?
+        const baseTitle = titleType === "eclus" ?
             `${boats[0]?.ecluse || ''}${newtEcluses ? ` / ${newtEcluses}` : ""}` :
             `${boats.length} bateau${boats.length > 1 ? 'x' : ''}`;
+        
+        this.elements.modalTitle.textContent = `${baseTitle} - ${dateStr}`;
 
         // Scroll vers le haut de la modal
         setTimeout(() => {
