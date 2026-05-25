@@ -366,7 +366,7 @@ class MapManager {
 
             // Si les bateaux ne sont pas fournis, les fetch depuis l'API
             if (!boats) {
-                const boatsResponse = await fetchBoatsForChannel(channel.voie_navigable, this.app.navigationManager.selectedDay);
+                const boatsResponse = await fetchBoatsForChannel(channel.voie_navigable, this.app.navigationManager.selectedDay, channel.id);
                 boats = boatsResponse.results || [];
             }
 

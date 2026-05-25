@@ -42,7 +42,6 @@ export async function fetchChannel() {
  * @param {string} secteurAppli - Le secteur d'application pour filtrer les écluses
  */
 export async function fetchLocksForChannel(secteurAppli) {
-    console.log("🚀 --- secteurAppli:", secteurAppli);
 
     try {
         const url = new OdsReqeust(API_CONFIG.ECLUSE_DATA);
@@ -64,18 +63,46 @@ export async function fetchLocksForChannel(secteurAppli) {
 }
 
 /**
- * Récupère les bateaux présents sur une voie navigable
+ * Extrait les limites d'écluses d'un ID de canal CNB
+ * @param {string} channelId - ID du canal (ex: "CNB 18 à 111")
+ * @returns {Object|null} Objet avec minEcluse et maxEcluse, ou null si non applicable
+ */
+function extractEcluseLimits(channelId) {
+    // Cherche un motif comme "18 à 111"
+    const match = channelId.match(/(\d+)\s+à\s+(\d+)/);
+    if (match) {
+        return {
+            minEcluse: parseInt(match[1]),
+            maxEcluse: parseInt(match[2])
+        };
+    }
+    return null;
+}
+
+/**
+ * Récupère les bateaux présents sur une voie navigable ou filtres par écluses
  * @param {string} voieNavigable - Le nom de la voie navigable
  * @param {Date} targetDate - (Optionnel) Date spécifique pour filtrer les bateaux. Si null, récupère hier + aujourd'hui
+ * @param {string} channelId - (Optionnel) ID du canal pour détecter les CNB avec filtrage par écluses
  */
-export async function fetchBoatsForChannel(voieNavigable, targetDate = null) {
+export async function fetchBoatsForChannel(voieNavigable, targetDate = null, channelId = null) {
     try {
-        // Adapter le nom du canal si nécessaire
-        const channelName = voieNavigable === "Blavet" ? "Canal du Blavet" : voieNavigable;
-
         const url = new OdsReqeust(API_CONFIG.DATA_URL)
-            .addWhere(`type_embarcation != "Canoë / Kayak"`) // exclure les canoës/kayaks du filtrage
-            .addWhere(`voie_navigable="${channelName}"`);
+            .addWhere(`type_embarcation != "Canoë / Kayak"`); // exclure les canoës/kayaks du filtrage
+
+        // Vérifier si c'est un CNB avec limites d'écluses
+        const ecluseLimits = channelId ? extractEcluseLimits(channelId) : null;
+
+        if (ecluseLimits) {
+            // Pour les CNB avec limites, filtrer par plage d'écluses
+            url
+                .addWhere(`num_ecluse >= ${ecluseLimits.minEcluse}`)
+                .addWhere(`num_ecluse <= ${ecluseLimits.maxEcluse}`);
+        } else {
+            // Pour les autres canaux, filtrer par voie_navigable
+            const channelName = voieNavigable === "Blavet" ? "Canal du Blavet" : voieNavigable;
+            url.addWhere(`voie_navigable="${channelName}"`);
+        }
 
         if (targetDate) {
             // Filtrer sur une date spécifique

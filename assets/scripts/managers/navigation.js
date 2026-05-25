@@ -191,7 +191,7 @@ export default class NavigationManager {
                 }
 
                 // Récupérer les bateaux pour la date spécifiée
-                const boatsResponse = await fetchBoatsForChannel(this.app.currentChannel.voie_navigable, date);
+                const boatsResponse = await fetchBoatsForChannel(this.app.currentChannel.voie_navigable, date, this.app.currentChannel.id);
                 // stocke les bateaux dans l'app pour les réutiliser plus tard
                 this.app.boats = boatsResponse.results || [];
 

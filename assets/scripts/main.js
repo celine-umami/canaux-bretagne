@@ -97,7 +97,7 @@ class Application {
         await Promise.all(
             this.channels.results
                 .map(async (ch) => {
-                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch.voie_navigable, targetDate)).results || []);
+                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch.voie_navigable, targetDate, ch.id)).results || []);
 
                     if (!this.allBoats[ch.voie_navigable]) {
                         this.allBoats[ch.voie_navigable] = {};
@@ -206,7 +206,7 @@ class Application {
             this.locks = locksResponse.results || [];
 
             // Récupérer les bateaux pour les utiliser later
-            this.boats = await fetchBoatsForChannel(channel.voie_navigable, this.navigationManager.selectedDay);
+            this.boats = await fetchBoatsForChannel(channel.voie_navigable, this.navigationManager.selectedDay, channel.id);
 
 
 
