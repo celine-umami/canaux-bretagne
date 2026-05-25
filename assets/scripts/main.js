@@ -97,19 +97,13 @@ class Application {
         await Promise.all(
             this.channels.results
                 .map(async (ch) => {
-                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch, targetDate)).results || []);
-
-                    // Filtrer les bateaux pour correspondre à la plage d'écluses du sous-canal
-                    const filteredBoats = boatsForChannel.filter(boat => {
-                        if (!ch.minEcluse && !ch.maxEcluse) return true; // Si pas de plage d'écluses, on prend tous les bateaux
-                        return (boat.num_ecluse >= ch.minEcluse && boat.num_ecluse <= ch.maxEcluse)
-                    });
+                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch.voie_navigable, targetDate)).results || []);
 
                     if (!this.allBoats[ch.voie_navigable]) {
                         this.allBoats[ch.voie_navigable] = {};
                     }
 
-                    this.allBoats[ch.voie_navigable][ch.id] = filteredBoats;
+                    this.allBoats[ch.voie_navigable][ch.id] = boatsForChannel;
                 })
         );
     }
@@ -204,13 +198,15 @@ class Application {
             await this.mapManager.loadChannel(channel, (boat) =>
                 this.handleBoatClick(boat)
             );
+            console.log("🚀 --- Application --- channel.secteur_appli:", channel.secteur_appli);
 
             // Récupérer et stocker les écluses pour les utiliser plus tard
-            const locksResponse = await fetchLocksForChannel(channel);
+            const locksResponse = await fetchLocksForChannel(channel.secteur_appli);
+
             this.locks = locksResponse.results || [];
 
             // Récupérer les bateaux pour les utiliser later
-            this.boats = await fetchBoatsForChannel(channel, this.navigationManager.selectedDay);
+            this.boats = await fetchBoatsForChannel(channel.voie_navigable, this.navigationManager.selectedDay);
 
 
 

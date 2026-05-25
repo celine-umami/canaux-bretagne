@@ -37,73 +37,46 @@ class HomePageManager {
   /**
    * 
    * @param {ChannelsType[]} channels 
-   * @param {boolean} isSubSection - pour que ca traite les sous section ou pas
    */
-  renderChannelList(channels, isSubSection = false) {
-
-    // si on est pas dans une sous section on cache le bouton de retour en arrière
-    if (!isSubSection) {
-      this.hideBackButton();
-    }
-
+  renderChannelList(channels) {
+    this.hideBackButton();
     this.setTitle("Cartographie des canaux");
 
     // écrase un potentiel ancien contenu (ex: "Chargement...")
     this.channelListContainer.innerHTML = '';
 
-    // tabluex qui stock les voie naviable pour pas avoir de doublon
-    const voieNavigableChannelRendered = [];
-
-    // partour tout les canaux pour les rendre sauf si la voir navigable a déjé été rendu
-    channels.sort((a, b) => a.voie_navigable - b.voie_navigable).forEach(channel => {
-      // si il a déjé été rendu on ne le rend pas a nouveux
-      if (voieNavigableChannelRendered.includes(channel.voie_navigable) && !isSubSection) {
-        return;
-      }
-
-      const channelCard = this.channelCardHTML(channel, isSubSection);
+    // Afficher chaque secteur_appli comme un canal à part entière
+    channels.forEach(channel => {
+      const channelCard = this.channelCardHTML(channel);
 
       // ajoute le listener pour allez sur la map
-      // crée temporairment le lisener pour allez sur la map
       const bntGoMap = channelCard.querySelector(".canal-card__button");
 
       bntGoMap.addEventListener("click", (e) => {
-        // si il a pas de sous section ou que c'est déja une sous section on va directement sur la map
-        if (channel.id_section === undefined || isSubSection) {
-          window.uiManager.handleChangeCannel(channel, window.app.channels.results);
-          window.app.handleChannelSelect(isSubSection ? channel.id : channel.voie_navigable);
-          window.navigationManager.navigate("map");
-          return;
-        }
-        // sion on change les canaux de la map pour afficher les sous section
-        // en appelant récursivement la fonction de rendu de la liste
-        this.renderChannelList(channels.filter(c => c.voie_navigable === channel.voie_navigable), true);
-        this.setTitle(channel.voie_navigable);
-        // affiche le bouton de retour en arrière
-        this.showBackButton();
+        window.uiManager.handleChangeCannel(channel, window.app.channels.results);
+        window.app.handleChannelSelect(channel.id);
+        window.navigationManager.navigate("map");
       });
 
       this.channelListContainer.appendChild(channelCard);
-      voieNavigableChannelRendered.push(channel.voie_navigable);
     });
   }
 
   /**
    * @param {ChannelsType} channel
-   * @param {boolean} isSubSection - pour que ca traite les sous section ou pas
    * @returns {HTMLDivElement}
    */
-  channelCardHTML(channel, isSubSection = false) {
+  channelCardHTML(channel) {
     const cardHTML = document.createElement("div");
     cardHTML.classList.add("canal-card");
     cardHTML.style.backgroundColor = this.getColorCardChannel(channel.voie_navigable);
 
-    const title = isSubSection ? this.generateNameSoubSection(channel) : channel.voie_navigable;
+    const title = channel.secteur_appli || channel.voie_navigable;
 
     /** @type {Object.<string, Boat[]>} */
     const listBoatsForChannel = window.app.allBoats[channel.voie_navigable] || [];
 
-    const boatsForThisSection = isSubSection ? listBoatsForChannel[channel.id] || [] : Object.values(listBoatsForChannel).flat() || [];
+    const boatsForThisSection = listBoatsForChannel[channel.id] || [];
 
     const { montant, descendant } = boatsForThisSection.reduce((acc, boat) => {
       if (boat.sens === "Montant") {
@@ -173,14 +146,6 @@ class HomePageManager {
       default:
         return "#AFCB56";
     }
-  }
-
-  /**
-   * Génère le titre de la card pour une sous section
-   * @param {ChannelsType} channel
-   */
-  generateNameSoubSection(channel) {
-    return `${channel.voie_navigable} entre n°${channel.minEcluse} et n°${channel.maxEcluse}`;
   }
 
   /**

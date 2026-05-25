@@ -194,12 +194,6 @@ class MapManager {
                 const numEcluse = boat.num_ecluse;
                 const sens = boat.sens;
 
-                // si il a une ecluse supèrieure ou inferieure au max du cannal, on ignore le bateau c'est normal c'est que il cherche a placer un bateux d"une autre section du cannal
-                if ((channel.maxEcluse && numEcluse > channel.maxEcluse) || (channel.minEcluse && numEcluse < channel.minEcluse)) {
-                    // npas de warn car c'est normal, le bateau est juste dans une autre section du canal
-                    return;
-                }
-
                 if (numEcluse === null || numEcluse === undefined) {
                     console.warn(`⚠️ [MapManager.addBoats()] Bateau ${boat.nom_bateau} sans num_ecluse`);
                     return;
@@ -366,13 +360,13 @@ class MapManager {
         try {
             // Si les locks ne sont pas fournis, les fetch depuis l'API
             if (!locks) {
-                const locksResponse = await fetchLocksForChannel(channel);
+                const locksResponse = await fetchLocksForChannel(channel.secteur_appli);
                 locks = locksResponse.results || [];
             }
 
             // Si les bateaux ne sont pas fournis, les fetch depuis l'API
             if (!boats) {
-                const boatsResponse = await fetchBoatsForChannel(channel, this.app.navigationManager.selectedDay);
+                const boatsResponse = await fetchBoatsForChannel(channel.voie_navigable, this.app.navigationManager.selectedDay);
                 boats = boatsResponse.results || [];
             }
 

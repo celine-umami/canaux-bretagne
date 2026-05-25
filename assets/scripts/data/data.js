@@ -7,82 +7,28 @@ import { API_CONFIG } from './config.js';
 import { OdsReqeust } from './odsRequest.js';
 
 /**
- * Récupère toutes les écluses pour un canal spécifique (avec pagination)
- */
-export async function fetchAllLocksForSpecificChannel(channelName) {
-    try {
-        const url = new OdsReqeust(API_CONFIG.ECLUSE_DATA)
-            .addWhere(`voie_navigable="${channelName}"`)
-
-        return (await url.execute()).results;
-    } catch (error) {
-        console.error(`Erreur lors du chargement des écluses pour ${channelName}:`, error);
-        throw error;
-    }
-}
-
-/**
- * Récupère la liste des canaux disponibles
- * Divise "Canal de Nantes à Brest" en 3 sections
+ * Récupère la liste des canaux disponibles groupés par secteur_appli
  */
 export async function fetchChannel() {
     try {
         const url = new OdsReqeust(API_CONFIG.ECLUSE_DATA)
-            .addParam("group_by", "voie_navigable");
+            .addParam("group_by", "secteur_appli")
 
         const data = await url.execute();
 
-        const processedResults = [];
 
-        for (const result of data.results) {
-            if (result.voie_navigable === "Canal de Nantes à Brest") {
-                // Récupérer toutes les écluses de ce canal (en 3 requêtes)
-                const locks = await fetchAllLocksForSpecificChannel("Canal de Nantes à Brest");
+        // Formater les résultats et filtrer ceux sans secteur_appli
+        const processedResults = data.results
+            .filter((result) => result.secteur_appli != null)
+            .map((result) => {
+                return {
+                    id: result.secteur_appli,
+                    secteur_appli: result.secteur_appli,
+                    voie_navigable: result.secteur_appli,
+                    ...result
+                };
+            });
 
-                if (locks.length === 0) {
-                    processedResults.push(result);
-                    continue;
-                }
-
-                // Trier par num_ecluse
-                locks.sort((a, b) => a.num_ecluse - b.num_ecluse);
-
-                // Diviser en 3 parties
-                const third = Math.ceil(locks.length / 3);
-                const sections = [
-                    {
-                        locks: locks.slice(0, third),
-                        minNum: locks[0].num_ecluse,
-                        maxNum: locks[third - 1].num_ecluse
-                    },
-                    {
-                        locks: locks.slice(third, 2 * third),
-                        minNum: locks[third].num_ecluse,
-                        maxNum: locks[2 * third - 1].num_ecluse
-                    },
-                    {
-                        locks: locks.slice(2 * third),
-                        minNum: locks[2 * third].num_ecluse,
-                        maxNum: locks[locks.length - 1].num_ecluse
-                    }
-                ];
-
-                // Ajouter les 3 sections comme channels
-                sections.forEach((section, idx) => {
-                    processedResults.push({
-                        id: `${result.voie_navigable}_section_${idx + 1}`,
-                        voie_navigable: result.voie_navigable,
-                        displayName: `${result.voie_navigable} écluse n°${section.minNum} à ${section.maxNum}`,
-                        minEcluse: section.minNum,
-                        maxEcluse: section.maxNum,
-                        id_section: idx + 1
-                    });
-                });
-            } else {
-                result.id = result.id || result.voie_navigable;
-                processedResults.push(result);
-            }
-        }
 
         return { ...data, results: processedResults };
     } catch (error) {
@@ -92,32 +38,20 @@ export async function fetchChannel() {
 }
 
 /**
- * Récupère les écluses pour un canal donné
- * @param {string|Object} channel - Soit un nom de canal (string), soit un objet channel avec voie_navigable, minEcluse, maxEcluse
+ * Récupère les écluses pour un secteur_appli spécifique
+ * @param {string} secteurAppli - Le secteur d'application pour filtrer les écluses
  */
-export async function fetchLocksForChannel(channel) {
-    try {
-        let channelName;
+export async function fetchLocksForChannel(secteurAppli) {
+    console.log("🚀 --- secteurAppli:", secteurAppli);
 
+    try {
         const url = new OdsReqeust(API_CONFIG.ECLUSE_DATA);
 
-        // Si channel est un objet
-        if (typeof channel === 'object') {
-            channelName = channel.voie_navigable;
-
-            // Si c'est un canal divisé (minEcluse/maxEcluse), ajouter les limites d'écluse
-            if (channel.minEcluse !== undefined && channel.maxEcluse !== undefined) {
-                url.addWhere(`voie_navigable="${channelName}"`)
-                    .addWhere(`num_ecluse >= ${channel.minEcluse}`)
-                    .addWhere(`num_ecluse <= ${channel.maxEcluse}`);
-            } else {
-                // Cas normal: juste par voie_navigable
-                url.addWhere(`voie_navigable="${channelName}"`);
-            }
+        // Filtrer uniquement par secteur_appli
+        if (secteurAppli) {
+            url.addWhere(`secteur_appli="${secteurAppli}"`);
         } else {
-            // Cas où channel est une string (rétro-compatibilité)
-            channelName = channel;
-            url.addWhere(`voie_navigable="${channel}"`);
+            throw new Error('secteur_appli est requis pour fetcher les écluses');
         }
 
         const data = url.execute()
@@ -130,23 +64,14 @@ export async function fetchLocksForChannel(channel) {
 }
 
 /**
- * Récupère les bateaux présents sur un canal
- * @param {string|Object} channel - Soit un nom de canal (string), soit un objet channel avec voie_navigable
+ * Récupère les bateaux présents sur une voie navigable
+ * @param {string} voieNavigable - Le nom de la voie navigable
  * @param {Date} targetDate - (Optionnel) Date spécifique pour filtrer les bateaux. Si null, récupère hier + aujourd'hui
  */
-export async function fetchBoatsForChannel(channel, targetDate = null) {
+export async function fetchBoatsForChannel(voieNavigable, targetDate = null) {
     try {
-        let channelName;
-
-        // Si channel est un objet
-        if (typeof channel === 'object') {
-            channelName = channel.voie_navigable;
-        } else {
-            // Cas normal: channel est une string (nom du canal)
-            channelName = channel;
-        }
-
-        channelName = channelName === "Blavet" ? "Canal du Blavet" : channelName;
+        // Adapter le nom du canal si nécessaire
+        const channelName = voieNavigable === "Blavet" ? "Canal du Blavet" : voieNavigable;
 
         const url = new OdsReqeust(API_CONFIG.DATA_URL)
             .addWhere(`type_embarcation != "Canoë / Kayak"`) // exclure les canoës/kayaks du filtrage
