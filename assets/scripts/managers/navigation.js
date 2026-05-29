@@ -149,7 +149,7 @@ export default class NavigationManager {
 
         // change le titre de la modal
         const baseTitle = titleType === "eclus" ?
-            `${boats[0]?.ecluse || ''}${newtEcluses ? ` / ${newtEcluses}` : ""}` :
+            `${boats[0]?.ecluse || ''}` :
             `${boats.length} bateau${boats.length > 1 ? 'x' : ''}`;
         
         this.elements.modalTitle.textContent = `${baseTitle} - ${dateStr}`;

@@ -382,6 +382,7 @@ h1 {
     font-size: 24px;
     font-weight: 700;
     line-height: 140%;
+    font-family: "Region Bretagne New";
     width: fit-content;
     border-color: transparent;
     border-radius: 8px;
@@ -524,6 +525,7 @@ h1 {
     margin-bottom: 10px;
     color: #1a1a1a;
     padding-right: 2rem;
+    font-family: 'Region Bretagne New';
 }
 
 /* Listes de bateaux */
@@ -552,6 +554,7 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: start;
+    font-family: "Region Bretagne New";
 }
 
 .boat-card-header-left {
@@ -761,6 +764,7 @@ h1 {
     padding: 10px;
     background-color: transparent;
     z-index: 1001;
+    font-family: "Region Bretagne New";
 }
 
 /* Bouton Accueil */
@@ -793,6 +797,8 @@ h1 {
     color: rgb(117, 117, 117);
     font-size: 12px;
     line-height: 100%;
+    font-family: "Region Bretagne New";
+
 }
 
 /* Groupe des dates */
@@ -820,6 +826,8 @@ h1 {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-family: "Region Bretagne New";
+
 }
 
 .footer-date-btn.active {
