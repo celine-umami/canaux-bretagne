@@ -1,3 +1,18 @@
+/* Import des fonts */
+@font-face {
+    font-family: "Region Bretagne New";
+    src: url("/assets/fonts/RegionBretagne-Reg.ttf") format("truetype");
+    font-weight: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Region Bretagne New";
+    src: url("/assets/fonts/RegionBretagne-Bold.woff") format("woff");
+    font-weight: bold;
+    font-display: swap;
+}
+
 /* Reset et styles globaux */
 * {
     margin: 0;
