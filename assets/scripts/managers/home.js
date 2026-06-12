@@ -164,7 +164,7 @@ class HomePageManager {
     // Calculer le nombre total de bateaux dans la section
     let totalBoats = { montant: 0, descendant: 0 };
     section.channels.forEach(channel => {
-      const listBoatsForChannel = window.app.allBoats[channel.voie_navigable] || [];
+      const listBoatsForChannel = window.app.allBoats[channel.secteur_appli] || [];
       const boatsForThisChannel = listBoatsForChannel[channel.id] || [];
       
       boatsForThisChannel.forEach(boat => {
@@ -218,7 +218,7 @@ class HomePageManager {
     const title = this.getChannelTitle(channel);
 
     /** @type {Object.<string, Boat[]>} */
-    const listBoatsForChannel = window.app.allBoats[channel.voie_navigable] || [];
+    const listBoatsForChannel = window.app.allBoats[channel.secteur_appli] || [];
 
     const boatsForThisSection = listBoatsForChannel[channel.id] || [];
 

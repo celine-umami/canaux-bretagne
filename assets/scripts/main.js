@@ -50,7 +50,7 @@ class Application {
      * @returns {Object|null} Le canal trouvé ou null
      */
     getChannelById(channelId) {
-        return this.channels.results.find(ch => (ch.id || ch.voie_navigable) === channelId) || null;
+        return this.channels.results.find(ch => ch.id === channelId) || null;
     }
 
     /**
@@ -97,13 +97,14 @@ class Application {
         await Promise.all(
             this.channels.results
                 .map(async (ch) => {
-                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch.voie_navigable, targetDate, ch.id)).results || []);
 
-                    if (!this.allBoats[ch.voie_navigable]) {
-                        this.allBoats[ch.voie_navigable] = {};
+                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch.secteur_appli, targetDate, ch.voie_navigable)).results || []);
+
+                    if (!this.allBoats[ch.secteur_appli]) {
+                        this.allBoats[ch.secteur_appli] = {};
                     }
 
-                    this.allBoats[ch.voie_navigable][ch.id] = boatsForChannel;
+                    this.allBoats[ch.secteur_appli][ch.id] = boatsForChannel;
                 })
         );
     }
@@ -113,7 +114,7 @@ class Application {
      * @param {string} channelId id du canal ou de la sous section à afficher
      */
     handleChannelSelect(channelId) {
-        const channelSelected = this.channels.results.find(ch => (ch.id || ch.voie_navigable) === channelId);
+        const channelSelected = this.channels.results.find(ch => ch.id === channelId);
 
         if (channelSelected) {
             // change le visuel des dropdown pour correspondre au canal sélectionné
@@ -198,7 +199,6 @@ class Application {
             await this.mapManager.loadChannel(channel, (boat) =>
                 this.handleBoatClick(boat)
             );
-            console.log("🚀 --- Application --- channel.secteur_appli:", channel.secteur_appli);
 
             // Récupérer et stocker les écluses pour les utiliser plus tard
             const locksResponse = await fetchLocksForChannel(channel.secteur_appli);
@@ -206,7 +206,7 @@ class Application {
             this.locks = locksResponse.results || [];
 
             // Récupérer les bateaux pour les utiliser later
-            this.boats = await fetchBoatsForChannel(channel.voie_navigable, this.navigationManager.selectedDay, channel.id);
+            this.boats = await fetchBoatsForChannel(channel.secteur_appli, this.navigationManager.selectedDay, channel.voie_navigable);
 
 
 
