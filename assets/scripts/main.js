@@ -98,7 +98,7 @@ class Application {
             this.channels.results
                 .map(async (ch) => {
 
-                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch.secteur_appli, targetDate, ch.voie_navigable)).results || []);
+                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch.secteur_appli, targetDate)).results || []);
 
                     if (!this.allBoats[ch.secteur_appli]) {
                         this.allBoats[ch.secteur_appli] = {};
@@ -206,7 +206,7 @@ class Application {
             this.locks = locksResponse.results || [];
 
             // Récupérer les bateaux pour les utiliser later
-            this.boats = await fetchBoatsForChannel(channel.secteur_appli, this.navigationManager.selectedDay, channel.voie_navigable);
+            this.boats = await fetchBoatsForChannel(channel.secteur_appli, this.navigationManager.selectedDay);
 
 
 

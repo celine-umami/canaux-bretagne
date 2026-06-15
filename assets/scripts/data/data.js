@@ -23,7 +23,6 @@ export async function fetchChannel() {
                 return {
                     id: result.secteur_appli,
                     secteur_appli: result.secteur_appli,
-                    voie_navigable: result.voie_navigable,
                     ...result
                 };
             });
@@ -86,9 +85,8 @@ function extractEcluseLimits(channelId) {
  * Récupère les bateaux présents dans un secteur_appli spécifique
  * @param {string} secteurAppli - Le secteur d'application (ex: "CNB 18 à 111" ou "Blavet")
  * @param {Date} targetDate - (Optionnel) Date spécifique pour filtrer les bateaux. Si null, récupère aujourd'hui
- * @param {string} voieNavigable - (Optionnel) La voie navigable pour affiner la recherche
  */
-export async function fetchBoatsForChannel(secteurAppli, targetDate = null, voieNavigable = null) {
+export async function fetchBoatsForChannel(secteurAppli, targetDate = null) {
     try {
         // Sécurité : vérifier que secteurAppli existe
         if (!secteurAppli) {
@@ -96,42 +94,10 @@ export async function fetchBoatsForChannel(secteurAppli, targetDate = null, voie
             return { results: [] };
         }
 
-        // Extraire les limites d'écluses du secteur_appli (pour les CNB avec limites dans le nom)
-        let ecluseLimits = extractEcluseLimits(secteurAppli);
-
-        // Si pas de limites trouvées dans le nom, récupérer depuis les écluses
-        if (!ecluseLimits) {
-            const locksResponse = await fetchLocksForChannel(secteurAppli);
-            const locks = locksResponse.results || [];
-
-            if (locks.length === 0) {
-                console.warn(`Aucune écluse trouvée pour ${secteurAppli}`);
-                return { results: [] };
-            }
-
-            const numEcluses = locks.map(l => l.num_ecluse).filter(n => n != null);
-            
-            if (numEcluses.length === 0) {
-                console.warn(`Aucune écluse valide trouvée pour ${secteurAppli}`);
-                return { results: [] };
-            }
-
-            ecluseLimits = {
-                minEcluse: Math.min(...numEcluses),
-                maxEcluse: Math.max(...numEcluses)
-            };
-        }
-
-        // Construire la requête avec les limites trouvées
+        // Construire la requête avec le filtre secteur_appli
         const url = new OdsReqeust(API_CONFIG.DATA_URL)
             .addWhere(`type_embarcation != "Canoë / Kayak"`)
-            .addWhere(`num_ecluse >= ${ecluseLimits.minEcluse}`)
-            .addWhere(`num_ecluse <= ${ecluseLimits.maxEcluse}`);
-        
-        // Ajouter un filtre sur la voie navigable si fournie
-        if (voieNavigable) {
-            url.addWhere(`voie_navigable="${voieNavigable}"`);
-        }
+            .addWhere(`secteur_appli="${secteurAppli}"`);
 
         // Filtrer par date
         if (targetDate) {
