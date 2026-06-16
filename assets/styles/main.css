@@ -839,6 +839,17 @@ h1 {
     display: none;
 }
 
+/* Lock markers and labels styling */
+.custom-icon.lock-icon {
+    pointer-events: none;
+    cursor: default;
+}
+
+.lock-label-icon {
+    pointer-events: none;
+    cursor: default;
+}
+
 /* Responsive destop/tablette */
 @media (min-width: 480px) {
     /* TODO */

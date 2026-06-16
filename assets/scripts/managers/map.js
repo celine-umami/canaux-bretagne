@@ -25,6 +25,7 @@ class MapManager {
         this.map = null;
         this.pathLayer = null;
         this.markersLayer = null;
+        this.labelsLayer = null;
         this.currentMarkers = [];
         this.lockMarkers = [];
         this.boatsClickHandlers = new Map();
@@ -57,6 +58,7 @@ class MapManager {
                 // Créer des couches pour les éléments
                 this.pathLayer = L.featureGroup().addTo(this.map);
                 this.markersLayer = L.featureGroup().addTo(this.map);
+                this.labelsLayer = L.featureGroup().addTo(this.map);
             }
 
             // Nettoyer les marqueurs précédents
@@ -78,6 +80,7 @@ class MapManager {
         }
 
         this.lockMarkers = []; // Réinitialiser les marqueurs d'écluse
+        this.labelsLayer.clearLayers(); // Vider les labels précédents
 
         locks.forEach(lock => {
             // Parser geo_point "lat, lng" en coordonnées
@@ -88,18 +91,89 @@ class MapManager {
                 return;
             }
 
+            // Créer le HTML de l'étiquette (utilisé pour le label)
+            const labelHtml = `<div style="
+                background-color: white;
+                padding: 7px 10px;
+                border-radius: 3px;
+                font-size: 12px;
+                font-weight: 600;
+                border: 1px solid #333;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;                
+                text-align: center;                
+                box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+                color: #333;
+            "><strong>${lock.nom_formulaire || lock.nom}</strong></div>`;
+
             const marker = L.marker([lat, lng], {
                 icon: this.createLockIcon(),
                 title: lock.nom
             });
 
-            marker.bindPopup(`
-                <strong>${lock.nom_formulaire || lock.nom}</strong><br/>
-            `);
+            // Stocker les infos du lock dans le marker pour les utiliser plus tard
+            marker.lock = lock;
+            marker.labelHtml = labelHtml;
 
             marker.addTo(this.markersLayer);
             this.lockMarkers.push(marker); // Stocker le marqueur
+
+            // Créer le label avec le même HTML
+            const labelIcon = L.divIcon({
+                className: 'lock-label lock-label-icon',
+                html: labelHtml,
+                iconSize: [120, 35],
+                iconAnchor: [52.5, -10],
+            });
+
+            const label = L.marker([lat, lng], { icon: labelIcon });
+            label.addTo(this.labelsLayer);
         });
+
+        // Initialiser la visibilité des labels
+        this.updateLabelsVisibility();
+    }
+
+    /**
+     * Met à jour la visibilité des labels des écluses selon le zoom
+     * Affiche les labels à partir du zoom 14
+     */
+    updateLabelsVisibility() {
+        const zoomThreshold = 14;
+        const currentZoom = this.map.getZoom();
+
+        if (currentZoom >= zoomThreshold) {
+            // Afficher les labels
+            if (!this.map.hasLayer(this.labelsLayer)) {
+                this.labelsLayer.addTo(this.map);
+            }
+        } else {
+            // Masquer les labels
+            if (this.map.hasLayer(this.labelsLayer)) {
+                this.map.removeLayer(this.labelsLayer);
+            }
+        }
+    }
+
+    /**
+     * Configure le listener de zoom pour afficher/masquer les labels des écluses
+     * Cette fonction doit être appelée APRÈS que addLocks() ait créé les labels
+     */
+    setupLockLabelsZoomListener() {
+        // Retirer l'ancien listener s'il existe
+        this.map.off('zoomend', this._zoomListener);
+        
+        // Créer le nouveau listener
+        this._zoomListener = () => {
+            this.updateLabelsVisibility();
+        };
+        
+        // Ajouter le listener
+        this.map.on('zoomend', this._zoomListener);
+        
+        // Appeler une première fois pour initialiser
+        this.updateLabelsVisibility();
     }
 
     /**
@@ -276,10 +350,9 @@ class MapManager {
     createLockIcon() {
         return L.divIcon({
             className: 'custom-icon lock-icon',
-            html: '',
+            html: '<div style="pointer-events: none; cursor: default;"></div>',
             iconSize: [3, 3],
             iconAnchor: [1, 1],
-            popupAnchor: [0, -3]
         });
     }
 
@@ -344,6 +417,9 @@ class MapManager {
 
             this.addLocks(locks);
             this.addBoats(boats, locks, channel, onBoatClick);
+
+            // Configurer le listener de zoom pour les labels
+            this.setupLockLabelsZoomListener();
 
             // Ajuster la vue pour afficher toutes les écluses
             if (locks && locks.length > 0) {
