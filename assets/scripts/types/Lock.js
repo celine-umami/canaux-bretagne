@@ -10,7 +10,10 @@
  * @property {string} sens - sens de navigation ("Montant" ou "Descendant")
  * @property {number} num_ecluse - numéro de l'écluse dans le sens de navigation
  * @property {string} voie_navigable - nom de la voie navigable sur laquelle se trouve l'écluse
+ * @property {string} secteur_appli - nom du secteur d'application auquel appartient l'écluse
+ * @property {number} id_ecluse - identifiant unique de l'écluse
  */
+
 
 
 export { };

@@ -14,9 +14,9 @@ export function getNextEcluses(currentEcluse, sens) {
     // trie les écluses dans l'ordre de navigation du bateau
     const sortedLocks = locks.sort((a, b) => {
         if (sens === "Montant") {
-            return b.num_ecluse - a.num_ecluse
+            return b.id_ecluse - a.id_ecluse
         }
-        return a.num_ecluse - b.num_ecluse
+        return a.id_ecluse - b.id_ecluse
     });
 
     // si on ce trouve sur le canal de Nantes a brest on inverse le sens car les écluse sont pas dans le bon sens

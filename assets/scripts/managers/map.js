@@ -43,11 +43,12 @@ class MapManager {
                 // Créer la carte avec un centre par défaut (centre de la Bretagne)
                 this.map = L.map(this.containerId).setView([48, -2], 8);
 
-                // Ajouter la couche OpenStreetMap
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '',
+                // Ajouter la couche CartoDB VoyagerNoLabels (gris avec contraste pour le bleu)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; CartoDB contributors',
                     maxZoom: 19,
-                    maxNativeZoom: 18
+                    maxNativeZoom: 18,
+                    subdomains: 'abcd'
                 }).addTo(this.map);
 
                 // ajoute le contrôle de plein écran
@@ -66,36 +67,6 @@ class MapManager {
         }
     }
 
-    /**
-     * Affiche le tracé d'un canal sur la carte
-     * @param {Array} pathCoordinates - Tableau des coordonnées [lat, lng] du canal
-     */
-    drawChannelPath(pathCoordinates) {
-        // Supprimer l'ancien tracé
-        this.pathLayer.clearLayers();
-
-        if (!pathCoordinates || pathCoordinates.length === 0) {
-            return;
-        }
-
-        // Dessiner la ligne du canal
-        const polyline = L.polyline(pathCoordinates, {
-            color: '#4a90e2',
-            weight: 4,
-            opacity: 0.7,
-            lineCap: 'round',
-            lineJoin: 'round'
-        });
-
-        polyline.addTo(this.pathLayer);
-
-        // Ajuster la vue pour afficher le canal
-        if (pathCoordinates.length > 0) {
-            this.map.fitBounds(L.latLngBounds(pathCoordinates), {
-                padding: [50, 50]
-            });
-        }
-    }
 
     /**
      * Ajoute les marqueurs des écluses sur la carte
@@ -186,16 +157,17 @@ class MapManager {
             // Dédupliquer les bateaux (garder le plus récent par nom)
             const deduplicatedBoats = this.deduplicateBoats(boats);
 
+
             // Grouper les bateaux par position géographique (lat, lng)
             // Les bateaux Montant/Descendant au même endroit seront ensemble
             const boatsByGeoPosition = new Map();
 
             deduplicatedBoats.forEach(boat => {
-                const numEcluse = boat.num_ecluse;
+                const numEcluse = boat.id_ecluse;
                 const sens = boat.sens;
 
                 if (numEcluse === null || numEcluse === undefined) {
-                    console.warn(`⚠️ [MapManager.addBoats()] Bateau ${boat.nom_bateau} sans num_ecluse`);
+                    console.warn(`⚠️ [MapManager.addBoats()] Bateau ${boat.nom_bateau} sans id_ecluse`);
                     return;
                 }
 
@@ -204,8 +176,8 @@ class MapManager {
                     return;
                 }
 
-                // Trouver l'écluse qui correspond EXACTEMENT à ce bateau (num_ecluse + sens)
-                const lock = locks.find(l => l.num_ecluse === numEcluse && l.sens === sens);
+                // Trouver l'écluse qui correspond EXACTEMENT à ce bateau (id_ecluse + sens)
+                const lock = locks.find(l => l.id_ecluse === numEcluse && l.sens === sens);
 
 
                 if (!lock) {
@@ -371,7 +343,6 @@ class MapManager {
             }
 
             this.addLocks(locks);
-            this.setupLockMarkersZoomListener();
             this.addBoats(boats, locks, channel, onBoatClick);
 
             // Ajuster la vue pour afficher toutes les écluses
