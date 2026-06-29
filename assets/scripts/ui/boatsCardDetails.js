@@ -118,7 +118,7 @@ export function createBoatDetailsCard(boat) {
         </div>
 
         <div class="boat-card-body">
-            ${boat.idtech && createBoatDetailsUniteInfo("Passage", "/assets/images/icons/tabler_clock.svg", extractTimeFromTimestamp(boat.idtech))}
+            ${boat.heure && createBoatDetailsUniteInfo("Passage", "/assets/images/icons/tabler_clock.svg", extractTimeFromTimestamp(boat.heure))}
             ${createBoatDetailsUniteInfo("Bief de Destination", "/assets/images/icons/mdi_target.svg", (boat.bief_destination && boat.bief_destination !== "null" && boat.bief_destination !== "") ? boat.bief_destination : "Non renseigné")}
             ${createBoatDetailsUniteInfo("Ecluse", "/assets/images/icons/boxicons_bridge.svg", boat.ecluse)}
             ${createBoatDetailsUniteInfo("Eclusier", "/assets/images/icons/ooui_user-avatar-outline.svg", [boat.identite, boat.prenom].filter(v => v != null && v !== "").join(" ") || "N/A")}

@@ -59,6 +59,7 @@ bief_destination: "18 - Les bateliers"
  * @property {string} identite - nom de éclusier
  * @property {string} prenom -prénom de éclusier
  * @property {string} bief_destination - liste des écluses prévues par le bateux séparé par des ";"
+ * @property {string} heure - heure de passage de l'écluse rempli par l'éclusier
  */
 
 
