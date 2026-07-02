@@ -29,6 +29,7 @@ class MapManager {
         this.currentMarkers = [];
         this.lockMarkers = [];
         this.boatsClickHandlers = new Map();
+        this.zoomThreshold = 12; // Seuil de zoom pour afficher les labels
     }
 
     /**
@@ -92,7 +93,7 @@ class MapManager {
             }
 
             // Créer le HTML de l'étiquette (utilisé pour le label)
-            const labelHtml = `<div style="
+            const labelHtml = `<div id="lock-label" style="
                 background-color: white;
                 padding: 7px 10px;
                 border-radius: 3px;
@@ -103,9 +104,8 @@ class MapManager {
                 overflow: hidden;
                 text-overflow: ellipsis;                
                 text-align: center;                
-                box-shadow: 0 1px 3px rgba(0,0,0,0.4);
                 color: #333;
-            "><strong>${lock.nom_formulaire || lock.nom}</strong></div>`;
+            ">${lock.nom_formulaire || lock.nom}</div>`;
 
             const marker = L.marker([lat, lng], {
                 icon: this.createLockIcon(),
@@ -124,7 +124,7 @@ class MapManager {
                 className: 'lock-label lock-label-icon',
                 html: labelHtml,
                 iconSize: [120, 35],
-                iconAnchor: [52.5, -10],
+                iconAnchor: [52.5, 35],
             });
 
             const label = L.marker([lat, lng], { icon: labelIcon });
@@ -137,13 +137,12 @@ class MapManager {
 
     /**
      * Met à jour la visibilité des labels des écluses selon le zoom
-     * Affiche les labels à partir du zoom 14
+     * Affiche les labels à partir du zoom défini par this.zoomThreshold
      */
     updateLabelsVisibility() {
-        const zoomThreshold = 14;
         const currentZoom = this.map.getZoom();
 
-        if (currentZoom >= zoomThreshold) {
+        if (currentZoom >= this.zoomThreshold) {
             // Afficher les labels
             if (!this.map.hasLayer(this.labelsLayer)) {
                 this.labelsLayer.addTo(this.map);
@@ -161,11 +160,16 @@ class MapManager {
      * Cette fonction doit être appelée APRÈS que addLocks() ait créé les labels
      */
     setupLockLabelsZoomListener() {
+        console.log('[MapManager] Configuration du listener de zoom');
+        
         // Retirer l'ancien listener s'il existe
-        this.map.off('zoomend', this._zoomListener);
+        if (this._zoomListener) {
+            this.map.off('zoomend', this._zoomListener);
+        }
         
         // Créer le nouveau listener
         this._zoomListener = () => {
+            const zoom = this.map.getZoom();
             this.updateLabelsVisibility();
         };
         
@@ -364,11 +368,6 @@ class MapManager {
         const updateLockMarkersOpacity = () => {
             const currentZoom = this.map.getZoom();
 
-            // Opacité basée sur le zoom: moins visible au dézoom
-            // A zoom 8: opacité = 0 (invisible)
-            // A zoom 10: opacité = 0.3
-            // A zoom 12: opacité = 0.6
-            // A zoom 13+: opacité = 1
             let opacity = 0.4;
             if (currentZoom >= 13) {
                 opacity = 1;

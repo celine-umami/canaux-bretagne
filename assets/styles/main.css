@@ -631,7 +631,6 @@ h1 {
     gap: 8px 16px;
 }
 
-.boat-card-detail {}
 
 .boat-card-img-title {
     height: 13px;
@@ -848,6 +847,10 @@ h1 {
 .lock-label-icon {
     pointer-events: none;
     cursor: default;
+}
+
+#lock-label{
+    font-family: "Region Bretagne New", sans-serif;
 }
 
 /* Responsive destop/tablette */
