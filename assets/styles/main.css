@@ -82,8 +82,9 @@ body {
     max-width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     height: auto;
+    padding: 0 20px;
 }
 
 .header-logo {
@@ -91,6 +92,28 @@ body {
     width: auto;
     object-fit: contain;
     object-position: center;
+}
+
+.btn-connexion {
+    background-color: #fff;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-family: "Region Bretagne New";
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-connexion:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.02);
+}
+
+.btn-connexion:active {
+    transform: scale(0.98);
 }
 
 /* gestionaire de pages */
@@ -685,9 +708,10 @@ h1 {
         margin: 0 auto;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         height: 60px;
         width: 100%;
+        padding: 0 20px;
     }
 
     .header-top {
