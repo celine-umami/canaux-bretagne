@@ -82,15 +82,48 @@ body {
     max-width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     height: auto;
+    padding: 0 20px;
+    position: relative;
+}
+
+.app-header .header-content::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .header-logo {
-    height: 44px;
-    width: auto;
-    object-fit: contain;
-    object-position: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.btn-connexion {
+    margin-left: auto;
+    padding: 8px 16px;
+    background-color: #AFCB56;
+    color: #000;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-connexion:hover {
+    background-color: #98b849;
+    transform: scale(1.05);
+}
+
+.btn-connexion:active {
+    transform: scale(0.95);
 }
 
 /* gestionaire de pages */
@@ -686,9 +719,11 @@ h1 {
         margin: 0 auto;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         height: 60px;
         width: 100%;
+        padding: 0 20px;
+        position: relative;
     }
 
     .header-top {

@@ -4,7 +4,7 @@
  */
 
 import { fetchChannel, fetchBoatsForChannel, fetchLocksForChannel } from './data/data.js';
-import { logConfig } from './data/config.js';
+import { logConfig, API_CONFIG } from './data/config.js';
 import MapManager from './managers/map.js';
 import UIManager from './managers/ui.js';
 import NavigationManager from "./managers/navigation.js";
@@ -60,6 +60,9 @@ class Application {
         try {
             // Initialiser le footer
             this.initFooter();
+
+            // Initialiser le bouton connexion
+            this.initLoginButton();
 
             // Récupérer la liste des canaux (dynamique ou mock)
             this.channels = await fetchChannel();
@@ -177,6 +180,19 @@ class Application {
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
                 this.navigationManager.setNewSelectedDay(yesterday);
+            });
+        }
+    }
+
+    /**
+     * Initialise le bouton connexion
+     */
+    initLoginButton() {
+        const btnConnexion = document.getElementById('btn-connexion');
+        if (btnConnexion) {
+            btnConnexion.addEventListener('click', () => {
+                const loginUrl = `${API_CONFIG.OAUTH_BACKEND_URL}/api/auth/login`;
+                window.location.href = loginUrl;
             });
         }
     }
