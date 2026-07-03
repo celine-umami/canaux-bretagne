@@ -1,52 +1,165 @@
 # Backend OAuth Huwise - Canaux Bretagne
 
-Ce backend Express gère l'authentification OAuth2 avec Huwise pour l'application Canaux Bretagne.
+Serveur Node.js unifié qui sert à la fois:
+- 🔐 L'API OAuth2 avec Huwise
+- 📁 Le frontend statique (HTML, CSS, JS, images)
 
-## 📋 Architecture
+## 🏗️ Architecture
+
+```
+server.js
+├── /api/auth/login      → Redirige vers Huwise
+├── /api/auth/callback   → Échange le code contre un token
+└── /*                   → Sert les fichiers statiques
+```
+
+Le frontend et le backend sont sur le **même serveur**, donc:
+- ✅ Pas de CORS
+- ✅ Pas de conflit de ports  
+- ✅ Déploiement simple sur CleverCloud
+
+## 📋 Structure
 
 ```
 backend/
-├── server.js           ← Serveur Express principal
+├── server.js              ← Serveur Express principal + fichiers statiques
 ├── routes/
-│   └── auth.js        ← Routes OAuth (login, callback, user, logout)
-├── .env               ← Variables d'environnement (à créer)
-├── .env.example       ← Template (fourni)
+│   └── auth.js            ← Routes OAuth (login, callback)
+├── .env                   ← Variables (local)
+├── .env.local             ← Variables locales (développement)
+├── .env.example           ← Template
 └── package.json
 ```
 
-## 🚀 Installation
+## 🚀 Installation & Utilisation
 
-### 1. Copier le fichier `.env.example` en `.env`
+### 1. Installation des dépendances
 
 ```bash
 cd backend
-cp .env.example .env
+npm install
 ```
 
-### 2. Remplir les variables d'environnement
+### 2. Configuration
 
-Ouvrez `backend/.env` et remplissez avec vos identifiants Huwise :
+**Pour développement local:**
+
+Le fichier `.env` est déjà configuré pour localhost. Vérifiez:
 
 ```env
-# Du portail Huwise OAuth
-HUWISE_CLIENT_ID=your_client_id_here
-HUWISE_CLIENT_SECRET=your_client_secret_here
-
-# URLs Huwise (demander à Huwise si différentes)
-HUWISE_AUTH_URL=https://auth.huwise.fr/oauth/authorize
-HUWISE_TOKEN_URL=https://auth.huwise.fr/oauth/token
-HUWISE_USER_URL=https://api.huwise.fr/v1/user
-
-# URL de redirection (doit correspondre exactement à celle enregistrée sur Huwise)
-CALLBACK_URL=https://recette-canaux-bretagne.cleverapps.io/api/auth/callback
-
-# URL du client (pour redirection après auth)
-CLIENT_URL=https://recette-canaux-bretagne.cleverapps.io
-
-# Configuration serveur
-PORT=3000
+HUWISE_CLIENT_ID=0a0c7a402e4f4b169d1e32a3c1046320
+HUWISE_CLIENT_SECRET=9f674ddd2bf240c594b6edf42c79717a
+CALLBACK_URL=http://localhost:3000/api/auth/callback
+CLIENT_URL=http://localhost:3000
 NODE_ENV=development
 ```
+
+**Pour la recette:**
+
+Avant de déployer sur recette, mettre à jour `backend/.env` avec:
+
+```env
+CALLBACK_URL=https://recette-canaux-bretagne.cleverapps.io/api/auth/callback
+CLIENT_URL=https://recette-canaux-bretagne.cleverapps.io
+NODE_ENV=production
+```
+
+### 3. Lancer le serveur
+
+**Développement** (auto-reload):
+```bash
+npm run dev
+```
+
+**Production**:
+```bash
+npm start
+```
+
+L'application est accessible sur http://localhost:3000
+
+## 🔐 Flux OAuth2
+
+1. **Utilisateur clique "Connexion"** → `/api/auth/login`
+2. **Backend génère un state CSRF** et redirige vers Huwise
+3. **Utilisateur s'authentifie chez Huwise**
+4. **Huwise redirige vers** `/api/auth/callback?code=xxx&state=yyy`
+5. **Backend échange le code contre un token** (serveur-à-serveur sécurisé)
+6. **Token stocké en HttpOnly cookie** (inaccessible au JavaScript)
+7. **Redirection vers l'accueil** avec le token en cookie
+
+## 📝 Variables d'environnement
+
+| Variable | Usage | Exemple |
+|---|---|---|
+| `HUWISE_CLIENT_ID` | OAuth Client ID | `0a0c7a402e4f4b169d1e32a3c1046320` |
+| `HUWISE_CLIENT_SECRET` | OAuth Client Secret | `9f674ddd2bf240c594b6edf42c79717a` |
+| `HUWISE_AUTH_URL` | Endpoint authorization Huwise | `https://data.bretagne.bzh/oauth2/authorize` |
+| `HUWISE_TOKEN_URL` | Endpoint token Huwise | `https://data.bretagne.bzh/oauth2/token` |
+| `CALLBACK_URL` | URL retour OAuth (doit correspondre exactement à Huwise) | `https://recette-canaux-bretagne.cleverapps.io/api/auth/callback` |
+| `CLIENT_URL` | URL frontend (pour CORS & redirect) | `https://recette-canaux-bretagne.cleverapps.io` |
+| `PORT` | Port du serveur | `3000` |
+| `NODE_ENV` | Environment | `development` ou `production` |
+
+## 🔒 Sécurité
+
+- ✅ **Token en HttpOnly cookie** → inaccessible au JavaScript (XSS protection)
+- ✅ **CSRF state validation** → Chaque requête a un state unique
+- ✅ **Client secret jamais exposé** → Échange code/token côté serveur
+- ✅ **HTTPS en production** → Secure flag automatique si `NODE_ENV=production`
+- ✅ **SameSite=Lax** → Protection contre les attaques cross-site
+
+## 🚀 Déploiement sur CleverCloud
+
+1. **Push le code avec git** (incluant `backend/`)
+2. **CleverCloud détecte** `backend/package.json`
+3. **Lance automatiquement** `npm start`
+4. **Variables d'env** configurées via le dashboard CleverCloud
+
+Voir [MISE_EN_ROUTE.md](../MISE_EN_ROUTE.md) pour les étapes complètes.
+
+## 📚 Endpoints API
+
+### `GET /api/auth/login`
+
+Redirige vers Huwise pour authentification.
+
+- Génère un state CSRF
+- Stocke le state en cookie (10 min)
+- Redirige vers Huwise
+
+**Réponse:** Redirection HTTP
+
+### `GET /api/auth/callback`
+
+Reçoit le code OAuth depuis Huwise et l'échange contre un token.
+
+- Valide le state CSRF
+- Échange le code contre un token
+- Stocke le token en HttpOnly cookie
+- Redirige vers le frontend
+
+**Paramètres:**
+- `code` (string) - Code OAuth de Huwise
+- `state` (string) - State CSRF
+
+**Réponse:** Redirection vers CLIENT_URL
+
+### `GET /health`
+
+Health check du serveur.
+
+**Réponse:**
+```json
+{ "status": "ok" }
+```
+
+## 📞 Support
+
+Pour des questions sur:
+- **Huwise**: Voir la documentation Huwise
+- **OAuth2**: Voir [RFC 6749](https://tools.ietf.org/html/rfc6749)
+- **Ce projet**: Voir [STRUCTURE_OAUTH.txt](../STRUCTURE_OAUTH.txt)
 
 ### 3. Installer les dépendances
 
