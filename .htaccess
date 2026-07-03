@@ -1,0 +1,9 @@
+# Apache configuration pour support PHP
+<IfModule mod_php7.c>
+    AddType application/x-httpd-php .php
+</IfModule>
+
+# Permettre l'accès direct aux fichiers PHP dans /api/
+<Directory "api">
+    Allow from all
+</Directory>
