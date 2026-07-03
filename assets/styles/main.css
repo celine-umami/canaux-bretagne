@@ -82,9 +82,10 @@ body {
     max-width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     height: auto;
     padding: 0 20px;
+    position: relative;
 }
 
 .header-logo {
@@ -95,6 +96,8 @@ body {
 }
 
 .btn-connexion {
+    position: absolute;
+    right: 20px;
     background-color: #fff;
     color: #000;
     border: none;
@@ -708,10 +711,11 @@ h1 {
         margin: 0 auto;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         height: 60px;
         width: 100%;
         padding: 0 20px;
+        position: relative;
     }
 
     .header-top {
