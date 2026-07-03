@@ -9,9 +9,6 @@ export const API_CONFIG = {
     ECLUSE_DATA: 'https://data.bretagne.bzh/api/explore/v2.1/catalog/datasets/ref-ecluse-biefs/records',
     // Authentification
     API_KEY: '4dec0b70a035e76a34bf11a4f8aa175ff989f968ddb19d61fdd25962',
-    
-    // Backend URL (sert à la fois l'API et le frontend)
-    OAUTH_BACKEND_URL: window.location.origin,
 
     // Timeouts (en ms)
     FETCH_TIMEOUT: 10000,
