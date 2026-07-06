@@ -51,13 +51,27 @@ try {
     // Vérifier l'état CSRF
     if ($state !== $storedState) {
         error_log("❌ État CSRF invalide");
-        header('Location: ' . $frontendUrl . '?auth=error&message=CSRF_validation_failed');
+        header('Content-Type: application/json');
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'csrf_validation_failed',
+            'message' => 'CSRF state mismatch',
+            'debug' => [
+                'state_received' => $state,
+                'state_stored' => $storedState
+            ]
+        ]);
         exit;
     }
 
     if (!$code) {
         error_log("❌ Code OAuth manquant");
-        header('Location: ' . $frontendUrl . '?auth=error&message=Missing_OAuth_code');
+        header('Content-Type: application/json');
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'missing_oauth_code',
+            'message' => 'OAuth code not received from Huwise'
+        ]);
         exit;
     }
 
@@ -94,7 +108,20 @@ try {
     if ($response === false) {
         error_log("❌ Erreur lors de la requête au serveur de token");
         error_log("❌ HTTP Response: " . print_r($http_response_header, true));
-        header('Location: ' . $frontendUrl . '?auth=error&message=Token_request_failed');
+        
+        // Retourner l'erreur en JSON pour déboguer
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'token_request_failed',
+            'message' => 'Failed to exchange code for token',
+            'debug' => [
+                'http_headers' => $httpInfo,
+                'redirect_uri' => $redirectUri,
+                'token_url' => $tokenUrl,
+                'post_data' => $postData
+            ]
+        ]);
         exit;
     }
 
@@ -104,7 +131,18 @@ try {
 
     if (!isset($tokenData['access_token'])) {
         error_log("❌ Token manquant dans la réponse: " . json_encode($tokenData));
-        header('Location: ' . $frontendUrl . '?auth=error&message=Missing_access_token');
+        
+        // Retourner l'erreur en JSON pour déboguer
+        header('Content-Type: application/json');
+        http_response_code(401);
+        echo json_encode([
+            'error' => 'missing_access_token',
+            'message' => 'Token not found in response',
+            'debug' => [
+                'response' => $tokenData,
+                'raw_response' => $response
+            ]
+        ]);
         exit;
     }
 
