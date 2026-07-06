@@ -6,11 +6,31 @@
 
 session_start();
 
+// Fonction pour obtenir l'URL complète en tenant compte du reverse proxy
+function getFullUrl() {
+    // Déterminer le protocole
+    $protocol = 'http';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+    } elseif (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        $protocol = 'https';
+    }
+    
+    // Déterminer le host
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'];
+    }
+    
+    return "{$protocol}://{$host}";
+}
+
 // Configuration OAuth
 $clientId = '0a0c7a402e4f4b169d1e32a3c1046320';
 $clientSecret = '9f674ddd2bf240c594b6edf42c79717a';
 $tokenUrl = 'https://data.bretagne.bzh/oauth2/token';
-$redirectUri = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}/api/auth/callback.php";
+$baseUrl = getFullUrl();
+$redirectUri = $baseUrl . '/api/auth/callback.php';
 
 // Récupérer le code et l'état
 $code = $_GET['code'] ?? null;
@@ -18,7 +38,14 @@ $state = $_GET['state'] ?? null;
 $storedState = $_SESSION['oauth_state'] ?? null;
 
 // Frontend URL pour redirection
-$frontendUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}";
+$frontendUrl = $baseUrl;
+
+// Log pour debug
+error_log("🔐 [CALLBACK] Base URL: {$baseUrl}");
+error_log("🔐 [CALLBACK] Redirect URI: {$redirectUri}");
+error_log("🔐 [CALLBACK] State reçu: {$state}");
+error_log("🔐 [CALLBACK] State en session: {$storedState}");
+error_log("🔐 [CALLBACK] Code OAuth: " . substr($code ?? '', 0, 10) . "...");
 
 try {
     // Vérifier l'état CSRF
@@ -74,8 +101,10 @@ try {
     error_log("✅ Token reçu: " . substr($accessToken, 0, 10) . "...");
 
     // Stocker le token en cookie HttpOnly
-    $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
-    setcookie('oauth_token', $accessToken, time() + (24 * 60 * 60), '/', $_SERVER['HTTP_HOST'], $isSecure, true);
+    $isSecure = !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' ||
+                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
+    $cookieDomain = !empty($_SERVER['HTTP_X_FORWARDED_HOST']) ? $_SERVER['HTTP_X_FORWARDED_HOST'] : $_SERVER['HTTP_HOST'];
+    setcookie('oauth_token', $accessToken, time() + (24 * 60 * 60), '/', $cookieDomain, $isSecure, true);
 
     error_log("🎉 Authentification réussie");
 
