@@ -30,7 +30,7 @@ $clientId = '0a0c7a402e4f4b169d1e32a3c1046320';
 $clientSecret = '9f674ddd2bf240c594b6edf42c79717a';
 $tokenUrl = 'https://data.bretagne.bzh/oauth2/token';
 $baseUrl = getFullUrl();
-$redirectUri = $baseUrl . '/api/auth/callback.php';
+$redirectUri = $baseUrl . '/api/auth/callback'; // Sans .php grâce à .htaccess
 
 // Récupérer le code et l'état
 $code = $_GET['code'] ?? null;

@@ -27,7 +27,7 @@ function getFullUrl() {
 $clientId = '0a0c7a402e4f4b169d1e32a3c1046320';
 $authUrl = 'https://data.bretagne.bzh/oauth2/authorize';
 $baseUrl = getFullUrl();
-$redirectUri = $baseUrl . '/api/auth/callback.php';
+$redirectUri = $baseUrl . '/api/auth/callback'; // Sans .php grâce à .htaccess
 
 // Log pour debug
 error_log("🔐 [LOGIN] Base URL: {$baseUrl}");
