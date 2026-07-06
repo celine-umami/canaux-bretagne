@@ -28,7 +28,7 @@ function getFullUrl() {
 // Configuration OAuth
 $clientId = '0a0c7a402e4f4b169d1e32a3c1046320';
 $clientSecret = '9f674ddd2bf240c594b6edf42c79717a';
-$tokenUrl = 'https://data.bretagne.bzh/oauth2/token';
+$tokenUrl = 'https://data.bretagne.bzh/oauth2/token/'; // Avec slash à la fin!
 $baseUrl = getFullUrl();
 $redirectUri = $baseUrl . '/api/auth/callback'; // Sans .php grâce à .htaccess
 
@@ -96,6 +96,7 @@ try {
     curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections
+    curl_setopt($ch, CURLOPT_POSTREDIR, 3); // Maintenir POST sur 301/302/303 redirects
     curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Désactiver la vérification SSL si problème
@@ -109,9 +110,11 @@ try {
     $curlError = curl_error($ch);
     $curlErrno = curl_errno($ch);
     $responseLength = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+    $effectiveUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     curl_close($ch);
     
     error_log("📥 HTTP Code: " . $httpCode);
+    error_log("📥 Effective URL: " . $effectiveUrl);
     error_log("📥 Response Length: " . $responseLength);
     error_log("📥 cURL Error Number: " . $curlErrno);
     error_log("📥 Token Response: " . ($response ?: '[EMPTY]'));
@@ -134,6 +137,7 @@ try {
                 'curl_error' => $curlError,
                 'curl_errno' => $curlErrno,
                 'response_length' => $responseLength,
+                'effective_url' => $effectiveUrl,
                 'raw_response' => substr($response, 0, 500), // Premiers 500 chars
                 'redirect_uri' => $redirectUri,
                 'token_url' => $tokenUrl
