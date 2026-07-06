@@ -72,6 +72,9 @@ try {
         'client_secret' => $clientSecret
     ]);
 
+    error_log("📤 POST Data: " . $postData);
+    error_log("📤 Token URL: " . $tokenUrl);
+
     $context = stream_context_create([
         'http' => [
             'method' => 'POST',
@@ -81,13 +84,21 @@ try {
         ]
     ]);
 
-    $response = file_get_contents($tokenUrl, false, $context);
+    // Supprimer les avertissements et capturer la vraie erreur
+    $response = @file_get_contents($tokenUrl, false, $context);
+    
+    // Capturer les métadonnées de la réponse HTTP
+    $httpInfo = $http_response_header ?? [];
+    error_log("📥 HTTP Headers: " . json_encode($httpInfo));
     
     if ($response === false) {
         error_log("❌ Erreur lors de la requête au serveur de token");
+        error_log("❌ HTTP Response: " . print_r($http_response_header, true));
         header('Location: ' . $frontendUrl . '?auth=error&message=Token_request_failed');
         exit;
     }
+
+    error_log("📥 Token Response: " . $response);
 
     $tokenData = json_decode($response, true);
 
