@@ -89,25 +89,30 @@ try {
     error_log("📤 POST Data: " . $postData);
     error_log("📤 Token URL: " . $tokenUrl);
 
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => 'Content-Type: application/x-www-form-urlencoded',
-            'content' => $postData,
-            'timeout' => 10
-        ]
+    // Utiliser cURL au lieu de file_get_contents pour gérer les redirections
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $tokenUrl);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/x-www-form-urlencoded'
     ]);
 
-    // Supprimer les avertissements et capturer la vraie erreur
-    $response = @file_get_contents($tokenUrl, false, $context);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
     
-    // Capturer les métadonnées de la réponse HTTP
-    $httpInfo = $http_response_header ?? [];
-    error_log("📥 HTTP Headers: " . json_encode($httpInfo));
+    error_log("📥 HTTP Code: " . $httpCode);
+    error_log("📥 Token Response: " . $response);
     
-    if ($response === false) {
+    if ($response === false || $curlError) {
         error_log("❌ Erreur lors de la requête au serveur de token");
-        error_log("❌ HTTP Response: " . print_r($http_response_header, true));
+        error_log("❌ cURL Error: " . $curlError);
         
         // Retourner l'erreur en JSON pour déboguer
         header('Content-Type: application/json');
@@ -116,7 +121,8 @@ try {
             'error' => 'token_request_failed',
             'message' => 'Failed to exchange code for token',
             'debug' => [
-                'http_headers' => $httpInfo,
+                'curl_error' => $curlError,
+                'http_code' => $httpCode,
                 'redirect_uri' => $redirectUri,
                 'token_url' => $tokenUrl,
                 'post_data' => $postData
@@ -124,8 +130,6 @@ try {
         ]);
         exit;
     }
-
-    error_log("📥 Token Response: " . $response);
 
     $tokenData = json_decode($response, true);
 
