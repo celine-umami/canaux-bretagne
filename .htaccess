@@ -1,9 +1,26 @@
-# Apache configuration pour support PHP
-<IfModule mod_php7.c>
+# Configuration Apache 2.4 pour Clever Cloud
+
+# Activer le module rewrite
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Servir les fichiers et dossiers existants comme-is
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # Rediriger vers index.html pour les autres requêtes (SPA)
+    RewriteRule ^(?!api/).*$ index.html [QSA,L]
+</IfModule>
+
+# Support pour les fichiers PHP
+<IfModule mod_addtype.c>
     AddType application/x-httpd-php .php
 </IfModule>
 
-# Permettre l'accès direct aux fichiers PHP dans /api/
-<Directory "api">
-    Allow from all
-</Directory>
+# Headers de sécurité
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
