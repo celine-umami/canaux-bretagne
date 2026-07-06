@@ -29,10 +29,6 @@ $authUrl = 'https://data.bretagne.bzh/oauth2/authorize';
 $baseUrl = getFullUrl();
 $redirectUri = $baseUrl . '/api/auth/callback'; // Sans .php grâce à .htaccess
 
-// Log pour debug
-error_log("🔐 [LOGIN] Base URL: {$baseUrl}");
-error_log("🔐 [LOGIN] Redirect URI: {$redirectUri}");
-
 // Générer un state aléatoire pour la sécurité CSRF
 $state = bin2hex(random_bytes(16));
 
@@ -48,8 +44,7 @@ $huWiseAuthUrl = $authUrl . '?' . http_build_query([
     'state' => $state
 ]);
 
-// Log pour debug
-error_log("🔐 Redirection vers Huwise: {$huWiseAuthUrl}");
+error_log("🔐 OAuth: Redirection vers Huwise");
 
 // Rediriger vers Huwise
 header('Location: ' . $huWiseAuthUrl);

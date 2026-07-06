@@ -2,6 +2,7 @@
 /**
  * Fichier: api/auth/callback.php
  * Reçoit le code OAuth et l'échange contre un token
+ * Stocke le token en cookie HttpOnly
  */
 
 session_start();
@@ -50,28 +51,14 @@ error_log("🔐 [CALLBACK] Code OAuth: " . substr($code ?? '', 0, 10) . "...");
 try {
     // Vérifier l'état CSRF
     if ($state !== $storedState) {
-        error_log("❌ État CSRF invalide");
-        header('Content-Type: application/json');
-        http_response_code(400);
-        echo json_encode([
-            'error' => 'csrf_validation_failed',
-            'message' => 'CSRF state mismatch',
-            'debug' => [
-                'state_received' => $state,
-                'state_stored' => $storedState
-            ]
-        ]);
+        error_log("❌ OAuth: État CSRF invalide (reçu: $state, attendu: $storedState)");
+        header('Location: ' . $frontendUrl . '?auth=error&message=csrf_failed');
         exit;
     }
 
     if (!$code) {
-        error_log("❌ Code OAuth manquant");
-        header('Content-Type: application/json');
-        http_response_code(400);
-        echo json_encode([
-            'error' => 'missing_oauth_code',
-            'message' => 'OAuth code not received from Huwise'
-        ]);
+        error_log("❌ OAuth: Code manquant");
+        header('Location: ' . $frontendUrl . '?auth=error&message=missing_code');
         exit;
     }
 
@@ -86,90 +73,41 @@ try {
         'client_secret' => $clientSecret
     ]);
 
-    error_log("📤 POST Data: " . $postData);
-    error_log("📤 Token URL: " . $tokenUrl);
-
-    // Utiliser cURL au lieu de file_get_contents pour gérer les redirections
+    // Utiliser cURL pour la requête
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $tokenUrl);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections
-    curl_setopt($ch, CURLOPT_POSTREDIR, 3); // Maintenir POST sur 301/302/303 redirects
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_POSTREDIR, 3);
     curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Désactiver la vérification SSL si problème
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/x-www-form-urlencoded'
-    ]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
-    $curlErrno = curl_errno($ch);
-    $responseLength = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-    $effectiveUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     curl_close($ch);
-    
-    error_log("📥 HTTP Code: " . $httpCode);
-    error_log("📥 Effective URL: " . $effectiveUrl);
-    error_log("📥 Response Length: " . $responseLength);
-    error_log("📥 cURL Error Number: " . $curlErrno);
-    error_log("📥 Token Response: " . ($response ?: '[EMPTY]'));
-    
-    if ($curlError) {
-        error_log("❌ cURL Error: " . $curlError);
-    }
-    
+
     if (empty($response) || $httpCode >= 400) {
-        error_log("❌ Erreur lors de la requête au serveur de token");
-        
-        // Retourner l'erreur en JSON pour déboguer
-        header('Content-Type: application/json');
-        http_response_code(500);
-        echo json_encode([
-            'error' => 'token_request_failed',
-            'message' => 'Failed to exchange code for token',
-            'debug' => [
-                'http_code' => $httpCode,
-                'curl_error' => $curlError,
-                'curl_errno' => $curlErrno,
-                'response_length' => $responseLength,
-                'effective_url' => $effectiveUrl,
-                'raw_response' => substr($response, 0, 500), // Premiers 500 chars
-                'redirect_uri' => $redirectUri,
-                'token_url' => $tokenUrl
-            ]
-        ]);
+        error_log("❌ OAuth: Erreur lors de l'échange du code (HTTP $httpCode: $curlError)");
+        header('Location: ' . $frontendUrl . '?auth=error&message=token_exchange_failed');
         exit;
     }
 
     $tokenData = json_decode($response, true);
-    
-    error_log("📥 Decoded Token Data: " . json_encode($tokenData));
 
     if (!isset($tokenData['access_token'])) {
-        error_log("❌ Token manquant dans la réponse: " . json_encode($tokenData));
-        
-        // Retourner l'erreur en JSON pour déboguer
-        header('Content-Type: application/json');
-        http_response_code(401);
-        echo json_encode([
-            'error' => 'missing_access_token',
-            'message' => 'Token not found in response',
-            'debug' => [
-                'decoded_response' => $tokenData,
-                'raw_response' => substr($response, 0, 1000), // Premiers 1000 chars
-                'json_error' => json_last_error_msg()
-            ]
-        ]);
+        error_log("❌ OAuth: Token manquant dans la réponse");
+        header('Location: ' . $frontendUrl . '?auth=error&message=missing_token');
         exit;
     }
 
     $accessToken = $tokenData['access_token'];
-    error_log("✅ Token reçu: " . substr($accessToken, 0, 10) . "...");
+    error_log("✅ OAuth: Token reçu - " . substr($accessToken, 0, 10) . "...");
 
     // Stocker le token en cookie HttpOnly
     $isSecure = !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' ||
@@ -177,14 +115,14 @@ try {
     $cookieDomain = !empty($_SERVER['HTTP_X_FORWARDED_HOST']) ? $_SERVER['HTTP_X_FORWARDED_HOST'] : $_SERVER['HTTP_HOST'];
     setcookie('oauth_token', $accessToken, time() + (24 * 60 * 60), '/', $cookieDomain, $isSecure, true);
 
-    error_log("🎉 Authentification réussie");
+    error_log("🎉 OAuth: Authentification réussie");
 
-    // Rediriger vers l'accueil avec succès
+    // Rediriger vers l'accueil
     header('Location: ' . $frontendUrl . '?auth=success');
     exit;
 
 } catch (Exception $e) {
-    error_log("❌ Erreur dans le callback OAuth: " . $e->getMessage());
+    error_log("❌ OAuth: Exception - " . $e->getMessage());
     header('Location: ' . $frontendUrl . '?auth=error&message=' . urlencode($e->getMessage()));
     exit;
 }
