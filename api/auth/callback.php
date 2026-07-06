@@ -75,14 +75,7 @@ try {
 
     // Stocker le token en cookie HttpOnly
     $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
-    setcookie('oauth_token', $accessToken, [
-        'expires' => time() + (24 * 60 * 60), // 24h
-        'path' => '/',
-        'domain' => $_SERVER['HTTP_HOST'],
-        'secure' => $isSecure,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
+    setcookie('oauth_token', $accessToken, time() + (24 * 60 * 60), '/', $_SERVER['HTTP_HOST'], $isSecure, true);
 
     error_log("🎉 Authentification réussie");
 
