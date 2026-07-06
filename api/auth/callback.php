@@ -98,6 +98,8 @@ try {
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections
     curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Désactiver la vérification SSL si problème
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/x-www-form-urlencoded'
     ]);
@@ -105,14 +107,21 @@ try {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
+    $curlErrno = curl_errno($ch);
+    $responseLength = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
     curl_close($ch);
     
     error_log("📥 HTTP Code: " . $httpCode);
-    error_log("📥 Token Response: " . $response);
+    error_log("📥 Response Length: " . $responseLength);
+    error_log("📥 cURL Error Number: " . $curlErrno);
+    error_log("📥 Token Response: " . ($response ?: '[EMPTY]'));
     
-    if ($response === false || $curlError) {
-        error_log("❌ Erreur lors de la requête au serveur de token");
+    if ($curlError) {
         error_log("❌ cURL Error: " . $curlError);
+    }
+    
+    if (empty($response) || $httpCode >= 400) {
+        error_log("❌ Erreur lors de la requête au serveur de token");
         
         // Retourner l'erreur en JSON pour déboguer
         header('Content-Type: application/json');
@@ -121,17 +130,21 @@ try {
             'error' => 'token_request_failed',
             'message' => 'Failed to exchange code for token',
             'debug' => [
-                'curl_error' => $curlError,
                 'http_code' => $httpCode,
+                'curl_error' => $curlError,
+                'curl_errno' => $curlErrno,
+                'response_length' => $responseLength,
+                'raw_response' => substr($response, 0, 500), // Premiers 500 chars
                 'redirect_uri' => $redirectUri,
-                'token_url' => $tokenUrl,
-                'post_data' => $postData
+                'token_url' => $tokenUrl
             ]
         ]);
         exit;
     }
 
     $tokenData = json_decode($response, true);
+    
+    error_log("📥 Decoded Token Data: " . json_encode($tokenData));
 
     if (!isset($tokenData['access_token'])) {
         error_log("❌ Token manquant dans la réponse: " . json_encode($tokenData));
@@ -143,8 +156,9 @@ try {
             'error' => 'missing_access_token',
             'message' => 'Token not found in response',
             'debug' => [
-                'response' => $tokenData,
-                'raw_response' => $response
+                'decoded_response' => $tokenData,
+                'raw_response' => substr($response, 0, 1000), // Premiers 1000 chars
+                'json_error' => json_last_error_msg()
             ]
         ]);
         exit;
