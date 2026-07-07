@@ -118,32 +118,8 @@ export async function logout() {
             authState.isAuthenticated = false;
             authState.token = null;
 
-            // Mettre à jour le bouton
-            updateAuthButton();
-
-            // Recharger les bateaux pour afficher les données publiques
-            const app = window.app; // L'application est exposée globalement dans main.js
-
-            if (app && app.currentChannel) {
-                try {
-                    // Importer à la volée pour éviter les cycles de dépendances
-                    const { fetchBoatsForChannel } = await import('../data/data.js');
-                    
-                    const boatsResponse = await fetchBoatsForChannel(app.currentChannel.secteur_appli);
-                    app.boats = boatsResponse; // Stocker la réponse complète
-                    
-                    // Effacer les anciens marqueurs et réafficher les bateaux (extraire .results)
-                    app.mapManager.clearMarkers();
-                    app.mapManager.addBoats(boatsResponse.results || [], app.locks, app.currentChannel, 
-                        (boats) => app.handleBoatClick(boats));
-                    
-                    console.info('🚤 Données publiques rechargées après déconnexion');
-                } catch (error) {
-                    console.error('❌ Erreur lors du rechargement des bateaux:', error);
-                    // En cas d'erreur, faire un reload simple
-                    window.location.reload();
-                }
-            }
+            // Recharger la page complètement pour réinitialiser l'app
+            window.location.reload();
         } else {
             console.error('❌ Erreur lors de la déconnexion:', data.message);
         }
