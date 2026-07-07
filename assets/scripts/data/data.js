@@ -166,13 +166,22 @@ export async function fetchBoatsForChannel(secteurAppli, targetDate = null) {
  */
 export async function fetchFromAPI(url, token = null, useApiKey = true) {
     try {
+        // Ajouter un cache-buster (timestamp) pour éviter le cache HTTP du navigateur
+        // Important après authentification pour recharger avec le nouveau token
+        const cacheBuster = Date.now();
+        const separator = url.includes('?') ? '&' : '?';
+        const urlWithCacheBuster = `${url}${separator}_t=${cacheBuster}`;
+
         if (API_CONFIG.DEBUG) {
-            console.info(`🔄 Fetch: ${url}`);
+            console.info(`🔄 Fetch: ${urlWithCacheBuster}`);
         }
 
         // Construire les headers
         const headers = {
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
         };
 
         // Ajouter le token OAuth si disponible
@@ -191,10 +200,11 @@ export async function fetchFromAPI(url, token = null, useApiKey = true) {
             }
         }
 
-        const response = await fetch(url, {
+        const response = await fetch(urlWithCacheBuster, {
             method: 'GET',
             mode: 'cors',
-            headers: headers
+            headers: headers,
+            cache: 'no-store'
         });
 
         if (API_CONFIG.DEBUG) {
