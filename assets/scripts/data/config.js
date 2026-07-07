@@ -8,7 +8,7 @@ export const API_CONFIG = {
     DATA_URL: 'https://data.bretagne.bzh/api/explore/v2.1/catalog/datasets/vn-appli-suivi-trafic/records',
     ECLUSE_DATA: 'https://data.bretagne.bzh/api/explore/v2.1/catalog/datasets/ref-ecluse-biefs/records',
     // Authentification
-    //API_KEY: '4dec0b70a035e76a34bf11a4f8aa175ff989f968ddb19d61fdd25962',
+    API_KEY: '4dec0b70a035e76a34bf11a4f8aa175ff989f968ddb19d61fdd25962',
 
     // Timeouts (en ms)
     FETCH_TIMEOUT: 10000,
