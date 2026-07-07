@@ -121,6 +121,33 @@ body {
     transform: scale(0.98);
 }
 
+/* Bouton de déconnexion (style alternatif pour se distinguer) */
+.btn-deconnexion {
+    position: absolute;
+    right: 20px;
+    background-color: #ff6b6b;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-family: "Region Bretagne New";
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-deconnexion:hover {
+    background-color: #ff5252;
+    transform: scale(1.02);
+}
+
+.btn-deconnexion:active {
+    transform: scale(0.98);
+}
+
 /* gestionaire de pages */
 .map-page {
     height: 100%;

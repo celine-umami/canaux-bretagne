@@ -16,6 +16,9 @@
     # Réécrire /api/auth/callback vers /api/auth/callback.php (sans extension visuelle)
     RewriteRule ^api/auth/callback$ api/auth/callback.php [QSA,L]
     
+    # Réécrire /api/auth/logout vers /api/auth/logout.php (sans extension visuelle)
+    RewriteRule ^api/auth/logout$ api/auth/logout.php [QSA,L]
+    
     # Réécrire /api/token vers /api/token.php (sans extension visuelle)
     RewriteRule ^api/token$ api/token.php [QSA,L]
     

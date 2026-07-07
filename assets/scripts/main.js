@@ -9,6 +9,7 @@ import MapManager from './managers/map.js';
 import UIManager from './managers/ui.js';
 import NavigationManager from "./managers/navigation.js";
 import HomePageManager from "./managers/home.js";
+import { initAuth } from './managers/auth.js';
 import { formatDateToFrench } from './utils/dateTimeutils.js';
 
 /** @typedef {import('./types/Boat').Boat} Boat */
@@ -58,6 +59,9 @@ class Application {
      */
     async init() {
         try {
+            // Initialiser le système d'authentification
+            await initAuth();
+
             // Initialiser le footer
             this.initFooter();
 
