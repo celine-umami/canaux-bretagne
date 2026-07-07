@@ -123,7 +123,7 @@ export async function logout() {
 
             // Recharger les bateaux pour afficher les données publiques
             // Importer à la volée pour éviter les cycles de dépendances
-            const { fetchBoatsForChannel } = await import('./data/data.js');
+            const { fetchBoatsForChannel } = await import('../data/data.js');
             const app = window.app; // L'application est exposée globalement dans main.js
 
             if (app && app.currentChannel) {
