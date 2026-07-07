@@ -62,6 +62,16 @@ class Application {
             // Initialiser le système d'authentification
             await initAuth();
 
+            // Vérifier si l'authentification vient de réussir (redirection du callback)
+            const urlParams = new URLSearchParams(window.location.search);
+            const authSuccess = urlParams.get('auth') === 'success';
+            this.justAuthenticated = authSuccess;
+            if (authSuccess) {
+                // Nettoyer l'URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                console.info('✅ Authentification réussie - Rechargement des données');
+            }
+
             // Initialiser le footer
             this.initFooter();
 
@@ -212,7 +222,16 @@ class Application {
             // Récupérer les bateaux pour les utiliser later
             this.boats = await fetchBoatsForChannel(channel.secteur_appli, this.navigationManager.selectedDay);
 
-
+            // Si l'utilisateur vient de se connecter, recharger les bateaux avec le token
+            if (this.justAuthenticated) {
+                console.info('🔄 Recharge des bateaux avec authentification');
+                this.boats = await fetchBoatsForChannel(channel.secteur_appli, this.navigationManager.selectedDay);
+                this.mapManager.clearMarkers();
+                this.mapManager.addBoats(this.boats, this.locks, channel, (boat) =>
+                    this.handleBoatClick(boat)
+                );
+                this.justAuthenticated = false; // Consommer le flag
+            }
 
             this.uiManager.hideLoading();
         } catch (error) {

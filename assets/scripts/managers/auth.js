@@ -122,17 +122,25 @@ export async function logout() {
             updateAuthButton();
 
             // Recharger les bateaux pour afficher les données publiques
-            // Importer à la volée pour éviter les cycles de dépendances
-            const { fetchBoatsForChannel } = await import('../data/data.js');
             const app = window.app; // L'application est exposée globalement dans main.js
 
             if (app && app.currentChannel) {
                 try {
+                    // Importer à la volée pour éviter les cycles de dépendances
+                    const { fetchBoatsForChannel } = await import('../data/data.js');
+                    
                     app.boats = await fetchBoatsForChannel(app.currentChannel.secteur_appli);
-                    app.mapManager.renderBoats(app.boats);
-                    console.info('🚤 Données publiques rechargées');
+                    
+                    // Effacer les anciens marqueurs et réafficher les bateaux
+                    app.mapManager.clearMarkers();
+                    app.mapManager.addBoats(app.boats, app.locks, app.currentChannel, 
+                        (boats) => app.handleBoatClick(boats));
+                    
+                    console.info('🚤 Données publiques rechargées après déconnexion');
                 } catch (error) {
                     console.error('❌ Erreur lors du rechargement des bateaux:', error);
+                    // En cas d'erreur, faire un reload simple
+                    window.location.reload();
                 }
             }
         } else {
