@@ -4,6 +4,7 @@
  */
 
 import { fetchLocksForChannel, fetchBoatsForChannel } from '../data/data.js';
+import { deduplicateBoats } from '../utils/boatUtils.js';
 import Application from "../main.js";
 
 /** @typedef {import('../types/Boat.js').Boat} Boat */
@@ -181,38 +182,6 @@ class MapManager {
     }
 
     /**
-     * Déduplique les bateaux en gardant le plus récent par nom
-     * @param {Array} boats - Tableau des bateaux
-     * @returns {Array} Bateaux dédupliqués (le plus récent par nom_bateau)
-     */
-    deduplicateBoats(boats) {
-        const boatsByName = new Map();
-
-        boats.forEach(boat => {
-            const name = boat.nom_bateau;
-            if (!name) return;
-
-            const existing = boatsByName.get(name);
-
-            // Comparer les timestamps idtech
-            if (!existing) {
-                boatsByName.set(name, boat);
-            } else {
-                // Garder le plus récent (idtech le plus grand)
-                const existingTime = new Date(existing.idtech).getTime();
-                const newTime = new Date(boat.idtech).getTime();
-
-                if (newTime > existingTime) {
-                    boatsByName.set(name, boat);
-                }
-            }
-        });
-
-        const deduped = Array.from(boatsByName.values());
-        return deduped;
-    }
-
-    /**
      * Ajoute les marqueurs des bateaux
      * @param {Boat[]} boats - Tableau des bateaux
      * @param {Lock} locks - Tableau des écluses
@@ -233,7 +202,7 @@ class MapManager {
 
         try {
             // Dédupliquer les bateaux (garder le plus récent par nom)
-            const deduplicatedBoats = this.deduplicateBoats(boats);
+            const deduplicatedBoats = deduplicateBoats(boats);
 
 
             // Grouper les bateaux par position géographique (lat, lng)

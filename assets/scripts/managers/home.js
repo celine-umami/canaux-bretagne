@@ -1,4 +1,5 @@
 import { escapeHtml } from "../utils/htmlUtils.js";
+import { deduplicateBoats } from "../utils/boatUtils.js";
 import Application from '../main.js';
 
 /** @typedef {import('../types/Boat.js').Boat} Boat */
@@ -161,13 +162,14 @@ class HomePageManager {
     cardHTML.style.backgroundColor = "#8B7D6B";
     cardHTML.style.cursor = "pointer";
 
-    // Calculer le nombre total de bateaux dans la section
+    // Calculer le nombre total de bateaux dans la section (avec déduplication)
     let totalBoats = { montant: 0, descendant: 0 };
     section.channels.forEach(channel => {
       const listBoatsForChannel = window.app.allBoats[channel.secteur_appli] || [];
       const boatsForThisChannel = listBoatsForChannel[channel.id] || [];
+      const deduplicatedBoats = deduplicateBoats(boatsForThisChannel);
       
-      boatsForThisChannel.forEach(boat => {
+      deduplicatedBoats.forEach(boat => {
         if (boat.sens === "Montant") {
           totalBoats.montant += 1;
         } else if (boat.sens === "Descendant") {
@@ -221,8 +223,9 @@ class HomePageManager {
     const listBoatsForChannel = window.app.allBoats[channel.secteur_appli] || [];
 
     const boatsForThisSection = listBoatsForChannel[channel.id] || [];
+    const deduplicatedBoats = deduplicateBoats(boatsForThisSection);
 
-    const { montant, descendant } = boatsForThisSection.reduce((acc, boat) => {
+    const { montant, descendant } = deduplicatedBoats.reduce((acc, boat) => {
       if (boat.sens === "Montant") {
         acc.montant += 1;
       } else if (boat.sens === "Descendant") {
