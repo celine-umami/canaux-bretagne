@@ -4,6 +4,7 @@
  */
 
 import { fetchChannel, fetchBoatsForChannel, fetchLocksForChannel } from './data/data.js';
+import { deduplicateBoats } from './utils/boatUtils.js';
 import { logConfig } from './data/config.js';
 import MapManager from './managers/map.js';
 import UIManager from './managers/ui.js';
@@ -114,7 +115,7 @@ class Application {
             this.channels.results
                 .map(async (ch) => {
 
-                    const boatsForChannel = this.mapManager.deduplicateBoats((await fetchBoatsForChannel(ch.secteur_appli, targetDate)).results || []);
+                    const boatsForChannel = deduplicateBoats((await fetchBoatsForChannel(ch.secteur_appli, targetDate)).results || []);
 
                     if (!this.allBoats[ch.secteur_appli]) {
                         this.allBoats[ch.secteur_appli] = {};
