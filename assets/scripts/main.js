@@ -225,9 +225,10 @@ class Application {
             // Si l'utilisateur vient de se connecter, recharger les bateaux avec le token
             if (this.justAuthenticated) {
                 console.info('🔄 Recharge des bateaux avec authentification');
-                this.boats = await fetchBoatsForChannel(channel.secteur_appli, this.navigationManager.selectedDay);
+                const newBoatsResponse = await fetchBoatsForChannel(channel.secteur_appli, this.navigationManager.selectedDay);
+                this.boats = newBoatsResponse; // Stocker la réponse complète
                 this.mapManager.clearMarkers();
-                this.mapManager.addBoats(this.boats, this.locks, channel, (boat) =>
+                this.mapManager.addBoats(newBoatsResponse.results || [], this.locks, channel, (boat) =>
                     this.handleBoatClick(boat)
                 );
                 this.justAuthenticated = false; // Consommer le flag
