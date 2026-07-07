@@ -178,10 +178,7 @@ export async function fetchFromAPI(url, token = null, useApiKey = true) {
 
         // Construire les headers
         const headers = {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+            'Accept': 'application/json'
         };
 
         // Ajouter le token OAuth si disponible
