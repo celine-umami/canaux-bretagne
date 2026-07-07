@@ -17,6 +17,9 @@ export class OdsReqeust {
     /** Token OAuth optionnel pour l'authentification */
     token = null;
 
+    /** Utiliser la clé API si pas de token */
+    useApiKey = true;
+
     /**
      * @param {URL} baseUrl - URL de l'api avec ses paramètres en class URL
      */
@@ -35,6 +38,15 @@ export class OdsReqeust {
      */
     setToken(token) {
         this.token = token;
+        return this;
+    }
+
+    /**
+     * Définir si la clé API doit être utilisée
+     * @param {boolean} useApiKey - Utiliser la clé API
+     */
+    setUseApiKey(useApiKey) {
+        this.useApiKey = useApiKey;
         return this;
     }
 
@@ -103,7 +115,7 @@ export class OdsReqeust {
 
         const url = this.build(request);
 
-        const reponse = await fetchFromAPI(url, this.token);
+        const reponse = await fetchFromAPI(url, this.token, this.useApiKey);
 
 
         // si il a moins de 100 résultats ou que on veut pas tout fetche on retourne la réponse telle quelle
@@ -121,7 +133,7 @@ export class OdsReqeust {
         for (let i = 1; i < pagesToFetch; i++) {
             const pageRequest = new URL(request);
             pageRequest.searchParams.set("offset", i * 100);
-            requests.push(fetchFromAPI(pageRequest.toString(), this.token));
+            requests.push(fetchFromAPI(pageRequest.toString(), this.token, this.useApiKey));
         }
 
         // fetche tout en parallèle

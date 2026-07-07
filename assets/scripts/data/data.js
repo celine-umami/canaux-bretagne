@@ -118,7 +118,8 @@ export async function fetchBoatsForChannel(secteurAppli, targetDate = null) {
         // Construire la requête avec le filtre secteur_appli
         const url = new OdsReqeust(API_CONFIG.DATA_URL)
             .addWhere(`type_embarcation != "Canoë / Kayak"`)
-            .addWhere(`secteur_appli="${secteurAppli}"`);
+            .addWhere(`secteur_appli="${secteurAppli}"`)
+            .setUseApiKey(false); // Pas de clé API pour les bateaux
 
         // Définir le token si disponible
         if (token) {
@@ -160,9 +161,10 @@ export async function fetchBoatsForChannel(secteurAppli, targetDate = null) {
  * Effectue une requête fetch simple et retourne le JSON
  * @param {string} url - L'URL à requêter
  * @param {string} token - (Optionnel) Token OAuth à inclure dans l'en-tête Authorization
+ * @param {boolean} useApiKey - (Optionnel) Utiliser la clé API si pas de token. Default: true
  * @returns {Promise<Object>} Les données JSON reçues
  */
-export async function fetchFromAPI(url, token = null) {
+export async function fetchFromAPI(url, token = null, useApiKey = true) {
     try {
         if (API_CONFIG.DEBUG) {
             console.info(`🔄 Fetch: ${url}`);
@@ -181,8 +183,8 @@ export async function fetchFromAPI(url, token = null) {
             }
         }
 
-        // Ajouter la clé API si disponible (et pas de token OAuth)
-        if (API_CONFIG.API_KEY && !token) {
+        // Ajouter la clé API si disponible (et pas de token OAuth ET useApiKey = true)
+        if (useApiKey && API_CONFIG.API_KEY && !token) {
             headers['Authorization'] = `apikey ${API_CONFIG.API_KEY}`;
             if (API_CONFIG.DEBUG) {
                 console.info(`🔐 Avec clé API`);
