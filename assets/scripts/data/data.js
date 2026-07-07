@@ -83,6 +83,7 @@ function extractEcluseLimits(channelId) {
 
 /**
  * Récupère les bateaux présents dans un secteur_appli spécifique
+ * Utilise le token OAuth automatiquement s'il est disponible
  * @param {string} secteurAppli - Le secteur d'application (ex: "CNB 18 à 111" ou "Blavet")
  * @param {Date} targetDate - (Optionnel) Date spécifique pour filtrer les bateaux. Si null, récupère aujourd'hui
  */
@@ -94,10 +95,35 @@ export async function fetchBoatsForChannel(secteurAppli, targetDate = null) {
             return { results: [] };
         }
 
+        // Récupérer le token OAuth via l'endpoint /api/token
+        let token = null;
+        try {
+            const tokenResponse = await fetch('/api/token', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'include'
+            });
+            const tokenData = await tokenResponse.json();
+            token = tokenData.access_token;
+            
+            if (token) {
+                console.info('🔐 Token OAuth récupéré et prêt à être utilisé');
+            } else {
+                console.warn('⚠️ Aucun token OAuth disponible - requête en mode public');
+            }
+        } catch (e) {
+            console.warn('⚠️ Impossible de récupérer le token:', e.message);
+        }
+
         // Construire la requête avec le filtre secteur_appli
         const url = new OdsReqeust(API_CONFIG.DATA_URL)
             .addWhere(`type_embarcation != "Canoë / Kayak"`)
             .addWhere(`secteur_appli="${secteurAppli}"`);
+
+        // Définir le token si disponible
+        if (token) {
+            url.setToken(token);
+        }
 
         // Filtrer par date
         if (targetDate) {
@@ -122,6 +148,7 @@ export async function fetchBoatsForChannel(secteurAppli, targetDate = null) {
                 .addWhere(`date < date'${tomorrowStr}'`);
         }
 
+        // Exécuter la requête
         return await url.execute();
     } catch (error) {
         console.error(`Erreur lors du chargement des bateaux:`, error);
@@ -132,9 +159,10 @@ export async function fetchBoatsForChannel(secteurAppli, targetDate = null) {
 /**
  * Effectue une requête fetch simple et retourne le JSON
  * @param {string} url - L'URL à requêter
+ * @param {string} token - (Optionnel) Token OAuth à inclure dans l'en-tête Authorization
  * @returns {Promise<Object>} Les données JSON reçues
  */
-export async function fetchFromAPI(url) {
+export async function fetchFromAPI(url, token = null) {
     try {
         if (API_CONFIG.DEBUG) {
             console.info(`🔄 Fetch: ${url}`);
@@ -145,11 +173,19 @@ export async function fetchFromAPI(url) {
             'Accept': 'application/json'
         };
 
-        // Ajouter la clé API si disponible
-        if (API_CONFIG.API_KEY) {
+        // Ajouter le token OAuth si disponible
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+            if (API_CONFIG.DEBUG) {
+                console.info(`🔐 Avec token OAuth`);
+            }
+        }
+
+        // Ajouter la clé API si disponible (et pas de token OAuth)
+        if (API_CONFIG.API_KEY && !token) {
             headers['Authorization'] = `apikey ${API_CONFIG.API_KEY}`;
             if (API_CONFIG.DEBUG) {
-                console.info(`🔐 Avec authentification API`);
+                console.info(`🔐 Avec clé API`);
             }
         }
 

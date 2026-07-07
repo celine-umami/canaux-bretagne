@@ -14,6 +14,9 @@ export class OdsReqeust {
     /** nombre maximal de request par sous request de pagination */
     requestLimit = 10;
 
+    /** Token OAuth optionnel pour l'authentification */
+    token = null;
+
     /**
      * @param {URL} baseUrl - URL de l'api avec ses paramètres en class URL
      */
@@ -24,6 +27,15 @@ export class OdsReqeust {
      */
     constructor(baseUrl) {
         this.url = new URL(baseUrl);
+    }
+
+    /**
+     * Définir le token OAuth
+     * @param {string} token - Token d'authentification
+     */
+    setToken(token) {
+        this.token = token;
+        return this;
     }
 
     /**
@@ -91,7 +103,7 @@ export class OdsReqeust {
 
         const url = this.build(request);
 
-        const reponse = await fetchFromAPI(url);
+        const reponse = await fetchFromAPI(url, this.token);
 
 
         // si il a moins de 100 résultats ou que on veut pas tout fetche on retourne la réponse telle quelle
@@ -109,7 +121,7 @@ export class OdsReqeust {
         for (let i = 1; i < pagesToFetch; i++) {
             const pageRequest = new URL(request);
             pageRequest.searchParams.set("offset", i * 100);
-            requests.push(fetchFromAPI(pageRequest.toString()));
+            requests.push(fetchFromAPI(pageRequest.toString(), this.token));
         }
 
         // fetche tout en parallèle
