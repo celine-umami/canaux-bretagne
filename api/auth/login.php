@@ -24,7 +24,7 @@ function getFullUrl() {
 }
 
 // Configuration OAuth
-$clientId = '0a0c7a402e4f4b169d1e32a3c1046320';
+$clientId = '583aa12d6fb24b35a3ae4d27f440f281';
 $authUrl = 'https://data.bretagne.bzh/oauth2/authorize';
 $baseUrl = getFullUrl();
 $redirectUri = $baseUrl . '/api/auth/callback'; // Sans .php grâce à .htaccess

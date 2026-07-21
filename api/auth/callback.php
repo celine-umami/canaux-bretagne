@@ -27,8 +27,8 @@ function getFullUrl() {
 }
 
 // Configuration OAuth
-$clientId = '0a0c7a402e4f4b169d1e32a3c1046320';
-$clientSecret = '9f674ddd2bf240c594b6edf42c79717a';
+$clientId = '583aa12d6fb24b35a3ae4d27f440f281';
+$clientSecret = 'de5fe037e9014aa8a88b03629b7cf06a';
 $tokenUrl = 'https://data.bretagne.bzh/oauth2/token/'; // Avec slash à la fin!
 $baseUrl = getFullUrl();
 $redirectUri = $baseUrl . '/api/auth/callback'; // Sans .php grâce à .htaccess
