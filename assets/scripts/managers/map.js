@@ -47,7 +47,7 @@ class MapManager {
                 this.map = L.map(this.containerId).setView([48, -2], 8);
 
                 // Ajouter la couche CartoDB VoyagerNoLabels (gris avec contraste pour le bleu)
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png?api_key=cb1_2dy5_1_42e177febc88001f44f6330d', {
                     attribution: '&copy; CartoDB contributors',
                     maxZoom: 19,
                     maxNativeZoom: 18,
