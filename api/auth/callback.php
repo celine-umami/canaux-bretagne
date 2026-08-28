@@ -27,11 +27,10 @@ function getFullUrl() {
 }
 
 // Configuration OAuth
-$clientId = '583aa12d6fb24b35a3ae4d27f440f281';
-$clientSecret = 'de5fe037e9014aa8a88b03629b7cf06a';
+$clientId = 'af6a8171ae5f4373bb7f1c00546543e9';
+$clientSecret = '746877cad8db47b8ae576d32932ea954';
 $tokenUrl = 'https://data.bretagne.bzh/oauth2/token/'; // Avec slash à la fin!
-$baseUrl = getFullUrl();
-$redirectUri = $baseUrl . '/api/auth/callback'; // Sans .php grâce à .htaccess
+$redirectUri = 'https://canaux-bretagne.umamidata.com/api/auth/callback';
 
 // Récupérer le code et l'état
 $code = $_GET['code'] ?? null;
@@ -39,7 +38,7 @@ $state = $_GET['state'] ?? null;
 $storedState = $_SESSION['oauth_state'] ?? null;
 
 // Frontend URL pour redirection
-$frontendUrl = $baseUrl;
+$frontendUrl = 'https://canaux-bretagne.umamidata.com';
 
 // Log pour debug
 error_log("🔐 [CALLBACK] Base URL: {$baseUrl}");

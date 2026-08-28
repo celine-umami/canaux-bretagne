@@ -24,10 +24,9 @@ function getFullUrl() {
 }
 
 // Configuration OAuth
-$clientId = '583aa12d6fb24b35a3ae4d27f440f281';
+$clientId = 'af6a8171ae5f4373bb7f1c00546543e9';
 $authUrl = 'https://data.bretagne.bzh/oauth2/authorize';
-$baseUrl = getFullUrl();
-$redirectUri = $baseUrl . '/api/auth/callback'; // Sans .php grâce à .htaccess
+$redirectUri = 'https://canaux-bretagne.umamidata.com/api/auth/callback';
 
 // Générer un state aléatoire pour la sécurité CSRF
 $state = bin2hex(random_bytes(16));
